@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حسابات ورشة الأثاث السحابي (هندسة متقدمة)</title>
+    <title>نظام حسابات ورشة الأثاث السحابي (مع الحماية والنسخ الاحتياطي)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
@@ -26,7 +26,7 @@
         .stat-card .val { font-size: 26px; font-weight: bold; color: var(--primary); }
         
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 240px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
+        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; max-height: 80vh; overflow-y: auto; }
         .dropdown-menu.show { display: block; }
         .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
@@ -44,7 +44,6 @@
         .btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 11px; }
         .btn-print { background: var(--secondary); padding: 4px 8px; font-size: 11px; }
-        .btn-whatsapp { background: #27ae60; padding: 4px 8px; font-size: 11px; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; border-radius: 4px; font-weight: bold; }
         .btn-edit { background: var(--warning); padding: 4px 8px; font-size: 11px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-back { background: #7f8c8d; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -57,11 +56,10 @@
         .clickable:hover { text-decoration: underline; }
         .sub-box { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
         .hidden { display: none !important; }
-
         .search-box { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         .search-box input { flex: 1; min-width: 200px; }
 
-        #printModal, #deliverModal {
+        #printModal, #deliverModal, #pinModal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -80,24 +78,30 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-
         @media print {
             body * { visibility: hidden !important; }
             #printableInvoiceArea, #printableInvoiceArea * { visibility: visible !important; }
-            #printableInvoiceArea {
-                position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; margin: 0;
-            }
+            #printableInvoiceArea { position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; margin: 0; }
             .no-print { display: none !important; }
         }
     </style>
 </head>
 <body>
 
+    <!-- نافذة إدخال رمز PIN للحماية -->
+    <div id="pinModal" style="display:flex;">
+        <div class="invoice-print-box" style="width: 350px; text-align: center;">
+            <h3 style="margin-bottom: 15px; color: var(--primary);">أدخل رمز الحماية (PIN)</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">إذا لم تقم بتعيين رمز PIN من قبل، اترك الحقل فارغاً واضغط دخل.</p>
+            <input type="password" id="pinInput" placeholder="أدخل رمز PIN" style="width: 100%; text-align: center; font-size: 18px; margin-bottom: 15px; letter-spacing: 5px;">
+            <button class="btn" onclick="verifyPin()" style="width: 100%;">دخول للنظام</button>
+        </div>
+    </div>
+
     <!-- نافذة تسجيل الدخول -->
-    <div id="login-box" class="container" style="max-width: 450px; margin-top: 100px;">
+    <div id="login-box" class="container hidden" style="max-width: 450px; margin-top: 100px;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
-            <h1 style="font-size: 22px; color: var(--primary); margin-bottom: 15px;">تسجيل الدخول للنظام السحابي المطور</h1>
-            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">قاعدة بيانات مهندسة بنظام Collections لخدمة الورشة لسنوات طويلة</p>
+            <h1 style="font-size: 22px; color: var(--primary); margin-bottom: 15px;">تسجيل الدخول للنظام السحابي</h1>
             <button type="button" onclick="loginWithGoogle()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; color: #444;">
                 <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -119,27 +123,30 @@
                     <button class="dropdown-item" onclick="switchSection('t-home')">🏠 الداشبورد (الرئيسية)</button>
                     <button class="dropdown-item" onclick="switchSection('t-sales')">👥 الزبائن</button>
                     <button class="dropdown-item" onclick="switchSection('t-costs')">📦 الموردين</button>
-                    <button class="dropdown-item" onclick="switchSection('t-orders')">📋 الطلبات (Siparişler)</button>
+                    <button class="dropdown-item" onclick="switchSection('t-orders')">📋 الطلبات</button>
                     <button class="dropdown-item" onclick="switchSection('t-wages')">👷 أجور العمال</button>
                     <button class="dropdown-item" onclick="switchSection('t-exp')">💸 المصاريف</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
-                    <button class="dropdown-item info" onclick="switchSection('t-settings')">⚙️ إعدادات الفاتورة والورشة</button>
-                    <button class="dropdown-item info" onclick="switchSection('t-audit')">🔍 سجل التدقيق (Audit Log)</button>
-                    <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
+                    <button class="dropdown-item info" onclick="exportBackup()">💾 تصدير نسخة احتياطية (JSON)</button>
+                    <button class="dropdown-item info" onclick="document.getElementById('importFileObj').click()">📥 استيراد نسخة احتياطية</button>
+                    <input type="file" id="importFileObj" class="hidden" accept=".json" onchange="importBackup(event)">
+                    <button class="dropdown-item warning" onclick="setPinPrompt()">🔑 تعيين/تغيير رمز PIN</button>
+                    <button class="dropdown-item info" onclick="switchSection('t-settings')">⚙️ إعدادات الورشة</button>
+                    <button class="dropdown-item info" onclick="switchSection('t-audit')">🔍 سجل التدقيق</button>
+                    <button class="dropdown-item danger" onclick="clearAllCloudData()">🗑️ حذف وتصفير البيانات السحابية</button>
                     <button class="dropdown-item danger" onclick="logout()">🚪 تسجيل الخروج</button>
                 </div>
             </div>
-
-            <h1 style="font-size: 15px;">ورشة الأثاث (هندسة سحابية متقدمة)</h1>
+            <h1 style="font-size: 15px;">ورشة الأثاث (نظام محسّن وآمن)</h1>
             <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ متصل بقاعدة بيانات Firestore السحابية (نظام Collections الموزع).</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ متصل بقاعدة البيانات السحابية بأمان تام.</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
-        <!-- الشاشة الرئيسية (الداشبورد) -->
+        <!-- الشاشة الرئيسية -->
         <div id="t-home" class="section active">
             <h2>لوحة المؤشرات العامة (Dashboard)</h2>
             <div class="dashboard" style="margin-top: 15px;">
@@ -148,17 +155,13 @@
                 <div class="stat-card"><h3>ديون الزبائن</h3><div class="val" id="dCustDebt">0 ₺</div></div>
                 <div class="stat-card"><h3>ديون الموردين</h3><div class="val" id="dSuppDebt">0 ₺</div></div>
                 <div class="stat-card" style="border-top-color: var(--warning);"><h3>خسارة الكروت</h3><div class="val" id="dCardLoss">0 ₺</div></div>
-                
-                <div class="stat-card" id="cardNetProfit" style="border-top-color: var(--success);"><h3>الربح الصافي</h3><div class="val" id="dNetProfit" style="color: var(--success);">0 ₺</div></div>
-                <div class="stat-card" id="cardGrossIncome" style="border-top-color: var(--secondary);"><h3>الدخل الإجمالي</h3><div class="val" id="dGrossIncome" style="color: var(--secondary);">0 ₺</div></div>
-                <div class="stat-card" id="cardTotalBudget" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
-            </div>
-            <div style="text-align: center; padding: 15px; color: #666; font-size: 13px;">
-                النظام الآن يعمل بتحميل البيانات ديناميكياً لضمان أقصى سرعة مهما زادت عدد السجلات والمعاملات لسنوات طويلة.
+                <div class="stat-card" style="border-top-color: var(--success);"><h3>الربح الصافي</h3><div class="val" id="dNetProfit" style="color: var(--success);">0 ₺</div></div>
+                <div class="stat-card" style="border-top-color: var(--secondary);"><h3>الدخل الإجمالي</h3><div class="val" id="dGrossIncome" style="color: var(--secondary);">0 ₺</div></div>
+                <div class="stat-card" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
             </div>
         </div>
 
-        <!-- قسم إعدادات الفاتورة والورشة -->
+        <!-- إعدادات الورشة -->
         <div id="t-settings" class="section">
             <h2>⚙️ إعدادات معلومات الورشة والفاتورة والشعار</h2>
             <form onsubmit="saveSettings(event)">
@@ -174,7 +177,7 @@
 
         <!-- سجل التدقيق -->
         <div id="t-audit" class="section">
-            <h2>🔍 سجل التدقيق (Audit Log) - تتبع التعديلات والحذف</h2>
+            <h2>🔍 سجل التدقيق (Audit Log)</h2>
             <table>
                 <thead><tr><th>الوقت والتاريخ</th><th>نوع الحدث</th><th>التفاصيل</th></tr></thead>
                 <tbody id="auditTable"></tbody>
@@ -185,12 +188,10 @@
         <div id="t-sales" class="section">
             <div id="salesMainView">
                 <h2>قائمة الزبائن</h2>
-                <div class="search-box">
-                    <input type="text" id="searchCustomerInput" placeholder="🔍 بحث عن زبون بالاسم..." oninput="renderCustomers()">
-                </div>
+                <div class="search-box"><input type="text" id="searchCustomerInput" placeholder="🔍 بحث عن زبون بالاسم..." oninput="renderCustomers()"></div>
                 <form onsubmit="addCustomer(event)">
                     <div class="group"><label>اسم الزبون</label><input type="text" id="newCustName" required placeholder="اسم الزبون"></div>
-                    <div class="group"><label>رقم الهاتف (للواتساب)</label><input type="text" id="newCustPhone" placeholder="مثال: 905351234567"></div>
+                    <div class="group"><label>رقم الهاتف</label><input type="text" id="newCustPhone" placeholder="مثال: 905351234567"></div>
                     <div style="display: flex; align-items: flex-end;"><button class="btn">إضافة زبون</button></div>
                 </form>
                 <table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجمالي المشتريات</th><th>المدفوع</th><th>الباقي (عليه)</th><th>إجراء</th></tr></thead><tbody id="customersTable"></tbody></table>
@@ -199,9 +200,7 @@
                 <input type="hidden" id="activeCustId">
                 <button class="btn btn-back" onclick="backToCustomers()">← رجوع للقائمة</button>
                 <h2 id="detCustTitle">حساب الزبون: </h2>
-                <div class="search-box">
-                    <input type="text" id="searchCustTxInput" placeholder="🔍 بحث في المعاملات..." oninput="renderActiveCustomerTxs()">
-                </div>
+                <div class="search-box"><input type="text" id="searchCustTxInput" placeholder="🔍 بحث في المعاملات..." oninput="renderActiveCustomerTxs()"></div>
                 <div class="sub-box">
                     <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">تسجيل حركة جديدة للزبون</h3>
                     <form id="custActionForm" onsubmit="saveCustomerAction(event)">
@@ -237,9 +236,7 @@
         <div id="t-costs" class="section">
             <div id="suppMainView">
                 <h2>قائمة الموردين</h2>
-                <div class="search-box">
-                    <input type="text" id="searchSupplierInput" placeholder="🔍 بحث عن مورد..." oninput="renderSuppliers()">
-                </div>
+                <div class="search-box"><input type="text" id="searchSupplierInput" placeholder="🔍 بحث عن مورد..." oninput="renderSuppliers()"></div>
                 <form onsubmit="addSupplier(event)">
                     <div class="group"><label>اسم المورد</label><input type="text" id="newSuppName" required placeholder="اسم المورد"></div>
                     <div style="display: flex; align-items: flex-end;"><button class="btn">إضافة مورد</button></div>
@@ -250,9 +247,7 @@
                 <input type="hidden" id="activeSuppId">
                 <button class="btn btn-back" onclick="backToSuppliers()">← رجوع للقائمة</button>
                 <h2 id="detSuppTitle">حساب المورد: </h2>
-                <div class="search-box">
-                    <input type="text" id="searchSuppTxInput" placeholder="🔍 بحث في المعاملات..." oninput="renderActiveSupplierTxs()">
-                </div>
+                <div class="search-box"><input type="text" id="searchSuppTxInput" placeholder="🔍 بحث في المعاملات..." oninput="renderActiveSupplierTxs()"></div>
                 <div class="sub-box">
                     <h3 id="suppFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">تسجيل معاملة للمورد</h3>
                     <form id="suppActionForm" onsubmit="saveSupplierAction(event)">
@@ -291,7 +286,7 @@
             </div>
         </div>
 
-        <!-- الطلبات (Siparişler) -->
+        <!-- الطلبات -->
         <div id="t-orders" class="section">
             <h2>إدارة الطلبات (Siparişler)</h2>
             <div class="search-box">
@@ -398,10 +393,6 @@
                 <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <div id="qrcode" style="padding: 5px; background: white;"></div>
                 </div>
-                <div style="margin-top: 25px; display: flex; justify-content: space-between; font-size: 12px;">
-                    <span>توقيع الورشة: ....................</span>
-                    <span>توقيع الزبون / المورد: ....................</span>
-                </div>
             </div>
             <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                 <button class="btn" onclick="window.print()">طباعة الآن</button>
@@ -464,6 +455,24 @@
             signOut(auth).then(() => location.reload());
         };
 
+        window.verifyPin = function() {
+            let savedPin = localStorage.getItem('workshop_pin') || "";
+            let entered = document.getElementById('pinInput').value;
+            if(savedPin && savedPin !== entered) {
+                alert("رمز PIN غير صحيح!");
+                return;
+            }
+            document.getElementById('pinModal').style.display = 'none';
+        };
+
+        window.setPinPrompt = function() {
+            let p = prompt("أدخل رمز PIN الجديد (اتركه فارغاً لإلغاء الحماية):");
+            if(p !== null) {
+                localStorage.setItem('workshop_pin', p);
+                alert("✅ تم تحديث رمز PIN بنجاح!");
+            }
+        };
+
         onAuthStateChanged(auth, async (user) => {
             const loginBox = document.getElementById('login-box');
             const appBox = document.getElementById('app-box');
@@ -472,6 +481,13 @@
                 document.getElementById('userEmailDisplay').innerText = "الحساب: " + user.email;
                 loginBox.classList.add('hidden');
                 appBox.classList.remove('hidden');
+                
+                // التحقق من رمز PIN
+                let savedPin = localStorage.getItem('workshop_pin') || "";
+                if(!savedPin) {
+                    document.getElementById('pinModal').style.display = 'none';
+                }
+
                 await loadSettings();
                 updateDash();
                 renderCustomers();
@@ -487,10 +503,8 @@
             }
         });
 
-        // دوال المساعدة المتقدمة للـ Collections
         window.getUid = () => currentUser ? currentUser.uid : null;
 
-        // --- الإعدادات ---
         async function loadSettings() {
             const uid = getUid();
             if(!uid) return;
@@ -509,6 +523,7 @@
                 await setDoc(docRef, { workshopName: "ورشة الأثاث والتنجيد", phone: "", address: "", qrText: "https://wa.me/905351234567", logoBase64: "" });
             }
         }
+
         window.handleLogoUpload = function(event) {
             let file = event.target.files[0];
             if(!file) return;
@@ -519,6 +534,7 @@
             };
             reader.readAsDataURL(file);
         }
+
         window.saveSettings = async function(e) {
             e.preventDefault();
             const uid = getUid();
@@ -534,6 +550,178 @@
             logAudit("تحديث إعدادات الورشة والفاتورة");
             alert("✅ تم حفظ الإعدادات بنجاح!");
         }
+
+        // --- تصدير واستيراد البيانات (Backup & Restore) ---
+        window.exportBackup = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            let backupData = {};
+            
+            // جلب كل المجموعات
+            const custSnap = await getDocs(collection(db, "workshops", uid, "customers"));
+            backupData.customers = [];
+            for(let cDoc of custSnap.docs) {
+                let cData = { id: cDoc.id, ...cDoc.data(), txs: [] };
+                let txSnap = await getDocs(collection(db, "workshops", uid, "customers", cDoc.id, "txs"));
+                txSnap.forEach(t => cData.txs.push({ id: t.id, ...t.data() }));
+                backupData.customers.push(cData);
+            }
+
+            const suppSnap = await getDocs(collection(db, "workshops", uid, "suppliers"));
+            backupData.suppliers = [];
+            for(let sDoc of suppSnap.docs) {
+                let sData = { id: sDoc.id, ...sDoc.data(), txs: [] };
+                let txSnap = await getDocs(collection(db, "workshops", uid, "suppliers", sDoc.id, "txs"));
+                txSnap.forEach(t => sData.txs.push({ id: t.id, ...t.data() }));
+                backupData.suppliers.push(sData);
+            }
+
+            const ordSnap = await getDocs(collection(db, "workshops", uid, "orders"));
+            backupData.orders = [];
+            ordSnap.forEach(d => backupData.orders.push({ id: d.id, ...d.data() }));
+
+            const wageSnap = await getDocs(collection(db, "workshops", uid, "wages"));
+            backupData.wages = [];
+            wageSnap.forEach(d => backupData.wages.push({ id: d.id, ...d.data() }));
+
+            const expSnap = await getDocs(collection(db, "workshops", uid, "expenses"));
+            backupData.expenses = [];
+            expSnap.forEach(d => backupData.expenses.push({ id: d.id, ...d.data() }));
+
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `workshop_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            alert("✅ تم تصدير النسخة الاحتياطية بنجاح!");
+        }
+
+        window.importBackup = async function(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    let data = JSON.parse(e.target.result);
+                    const uid = getUid();
+                    if(!uid) return;
+                    if(!confirm("⚠️ تحذير: استيراد النسخة الاحتياطية سيقوم بدمج البيانات أو إضافتها. هل تريد المتابعة؟")) return;
+
+                    if(data.customers) {
+                        for(let c of data.customers) {
+                            let cId = c.id || doc(collection(db, "workshops", uid, "customers")).id;
+                            await setDoc(doc(db, "workshops", uid, "customers", cId), { name: c.name, phone: c.phone || "", createdAt: c.createdAt || Date.now() });
+                            if(c.txs) {
+                                for(let t of c.txs) {
+                                    let tId = t.id || doc(collection(db, "workshops", uid, "customers", cId, "txs")).id;
+                                    await setDoc(doc(db, "workshops", uid, "customers", cId, "txs", tId), {
+                                        invNum: t.invNum || "INV-100000",
+                                        date: t.date || new Date().toISOString().split('T')[0],
+                                        desc: t.desc || "",
+                                        total: t.total || 0,
+                                        paid: t.paid || 0,
+                                        method: t.method || "كاش",
+                                        timestamp: t.timestamp || Date.now()
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    if(data.suppliers) {
+                        for(let s of data.suppliers) {
+                            let sId = s.id || doc(collection(db, "workshops", uid, "suppliers")).id;
+                            await setDoc(doc(db, "workshops", uid, "suppliers", sId), { name: s.name, createdAt: s.createdAt || Date.now() });
+                            if(s.txs) {
+                                for(let t of s.txs) {
+                                    let tId = t.id || doc(collection(db, "workshops", uid, "suppliers", sId, "txs")).id;
+                                    await setDoc(doc(db, "workshops", uid, "suppliers", sId, "txs", tId), {
+                                        invNum: t.invNum || "SUP-100000",
+                                        date: t.date || new Date().toISOString().split('T')[0],
+                                        desc: t.desc || "",
+                                        supplierTotalNet: t.supplierTotalNet || 0,
+                                        grossPaid: t.grossPaid || 0,
+                                        supplierPaidNet: t.supplierPaidNet || 0,
+                                        method: t.method || "كاش",
+                                        cardLoss: t.cardLoss || 0,
+                                        timestamp: t.timestamp || Date.now()
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    if(data.orders) {
+                        for(let o of data.orders) {
+                            let oId = o.id || doc(collection(db, "workshops", uid, "orders")).id;
+                            await setDoc(doc(db, "workshops", uid, "orders", oId), o);
+                        }
+                    }
+
+                    if(data.wages) {
+                        for(let w of data.wages) {
+                            let wId = w.id || doc(collection(db, "workshops", uid, "wages")).id;
+                            await setDoc(doc(db, "workshops", uid, "wages", wId), w);
+                        }
+                    }
+
+                    if(data.expenses) {
+                        for(let ex of data.expenses) {
+                            let exId = ex.id || doc(collection(db, "workshops", uid, "expenses")).id;
+                            await setDoc(doc(db, "workshops", uid, "expenses", exId), ex);
+                        }
+                    }
+
+                    alert("✅ تم استيراد البيانات بنجاح!");
+                    location.reload();
+                } catch(err) {
+                    alert("❌ خطأ في قراءة ملف النسخة الاحتياطية: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- حذف وتصفير البيانات السحابية بالكامل ---
+        window.clearAllCloudData = async function() {
+            if(!confirm("⚠️ تحذير خطير جداً: هل أنت متأكد من حذف جميع بيانات الورشة (الزبائن، الموردين، الطلبات، الأجور، المصاريف) نهائياً من السحابة؟ لا يمكن التراجع عن هذا الإجراء!")) return;
+            if(!confirm("تأكيد أخير: سيتم مسح كافة السجلات الحالية سحابياً.")) return;
+            
+            const uid = getUid();
+            if(!uid) return;
+            
+            try {
+                // حذف الزبائن ومعاملاتهم
+                const custSnap = await getDocs(collection(db, "workshops", uid, "customers"));
+                for(let c of custSnap.docs) {
+                    const txs = await getDocs(collection(db, "workshops", uid, "customers", c.id, "txs"));
+                    for(let t of txs.docs) await deleteDoc(t.ref);
+                    await deleteDoc(c.ref);
+                }
+                // حذف الموردين ومعاملاتهم
+                const suppSnap = await getDocs(collection(db, "workshops", uid, "suppliers"));
+                for(let s of suppSnap.docs) {
+                    const txs = await getDocs(collection(db, "workshops", uid, "suppliers", s.id, "txs"));
+                    for(let t of txs.docs) await deleteDoc(t.ref);
+                    await deleteDoc(s.ref);
+                }
+                // حذف الطلبات
+                const ordSnap = await getDocs(collection(db, "workshops", uid, "orders"));
+                for(let o of ordSnap.docs) await deleteDoc(o.ref);
+                // حذف الأجور
+                const wageSnap = await getDocs(collection(db, "workshops", uid, "wages"));
+                for(let w of wageSnap.docs) await deleteDoc(w.ref);
+                // حذف المصاريف
+                const expSnap = await getDocs(collection(db, "workshops", uid, "expenses"));
+                for(let ex of expSnap.docs) await deleteDoc(ex.ref);
+
+                alert("✅ تم تصفير وحذف جميع البيانات السحابية بنجاح.");
+                location.reload();
+            } catch(err) {
+                alert("❌ حدث خطأ أثناء الحذف: " + err.message);
+            }
+        };
 
         // --- سجل التدقيق ---
         async function logAudit(desc) {
@@ -559,7 +747,7 @@
             document.getElementById('auditTable').innerHTML = html || '<tr><td colspan="3" style="text-align:center;">لا توجد سجلات</td></tr>';
         }
 
-        // --- الزبائن والمعاملات (Sub-collection) ---
+        // --- الزبائن والمعاملات ---
         window.addCustomer = async function(e) {
             e.preventDefault();
             const uid = getUid();
@@ -580,7 +768,6 @@
                 let c = { id: docSnap.id, ...docSnap.data() };
                 if(searchVal && !c.name.toLowerCase().includes(searchVal)) continue;
                 
-                // جلب معاملات الزبون لحساب الإجماليات
                 const txSnap = await getDocs(collection(db, "workshops", uid, "customers", c.id, "txs"));
                 let tot = 0, paid = 0;
                 txSnap.forEach(t => { let d = t.data(); tot += (d.total || 0); paid += (d.paid || 0); });
@@ -689,7 +876,7 @@
             updateDash();
         }
 
-        // --- الموردين والمعاملات (Sub-collection) ---
+        // --- الموردين والمعاملات ---
         window.addSupplier = async function(e) {
             e.preventDefault();
             const uid = getUid();
@@ -832,16 +1019,12 @@
             updateDash();
         }
 
-        // --- الطلبات (Collection مستقلة) ---
+        // --- الطلبات ---
         async function populateOrderCustomerSelect() {
             const uid = getUid();
             let select = document.getElementById('orderCustSelect');
             select.innerHTML = '';
             const snap = await getDocs(collection(db, "workshops", uid, "customers"));
-            if(snap.empty) {
-                select.innerHTML = '<option value="">لا يوجد زبائن</option>';
-                return;
-            }
             snap.forEach(d => {
                 let c = d.data();
                 select.innerHTML += `<option value="${d.id}">${c.name}</option>`;
@@ -961,10 +1144,8 @@
             let method = document.getElementById('deliverMethod').value;
             let d = window.deliverDataCache;
 
-            // تحديث حالة الطلب
             await updateDoc(doc(db, "workshops", uid, "orders", orderId), { status: 'مكتمل' });
 
-            // إضافة فاتورة للزبون في الـ Sub-collection الخاص به
             let invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
             await addDoc(collection(db, "workshops", uid, "customers", d.custId, "txs"), {
                 invNum,
@@ -983,7 +1164,7 @@
             alert("✅ تم تسليم الطلب وتحويله لفاتورة للزبون بنجاح!");
         }
 
-        // --- أجور العمال (Collection مستقلة) ---
+        // --- أجور العمال ---
         window.addWage = async function(e) {
             e.preventDefault();
             const uid = getUid();
@@ -1022,7 +1203,7 @@
             updateDash();
         }
 
-        // --- المصاريف الثابتة (Collection مستقلة) ---
+        // --- المصاريف الثابتة ---
         window.addExpense = async function(e) {
             e.preventDefault();
             const uid = getUid();
@@ -1066,7 +1247,6 @@
             const uid = getUid();
             if(!uid) return;
 
-            // حساب المبيعات وديون الزبائن
             let tSales = 0, tCustDebt = 0;
             const custSnap = await getDocs(collection(db, "workshops", uid, "customers"));
             for(let cDoc of custSnap.docs) {
@@ -1076,7 +1256,6 @@
                 tCustDebt += (cTot - cPaid);
             }
 
-            // حساب المشتريات وديون الموردين وخسارة كروت الموردين
             let tPurchases = 0, tSuppDebt = 0, suppCardLoss = 0;
             const suppSnap = await getDocs(collection(db, "workshops", uid, "suppliers"));
             for(let sDoc of suppSnap.docs) {
@@ -1094,12 +1273,10 @@
                 tSuppDebt += (sTot - sPaidNet);
             }
 
-            // أجور العمال
             let totalWages = 0, wagesCardLoss = 0;
             const wageSnap = await getDocs(collection(db, "workshops", uid, "wages"));
             wageSnap.forEach(d => { let w = d.data(); totalWages += w.amount; wagesCardLoss += (w.cardLoss || 0); });
 
-            // المصاريف
             let totalExp = 0, expCardLoss = 0;
             const expSnap = await getDocs(collection(db, "workshops", uid, "expenses"));
             expSnap.forEach(d => { let ex = d.data(); totalExp += ex.amount; expCardLoss += (ex.cardLoss || 0); });
@@ -1114,13 +1291,11 @@
             document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
             document.getElementById('dSuppDebt').innerText = tSuppDebt.toLocaleString() + ' ₺';
             document.getElementById('dCardLoss').innerText = totalCardLoss.toLocaleString() + ' ₺';
-
             document.getElementById('dNetProfit').innerText = netProfit.toLocaleString() + ' ₺';
             document.getElementById('dGrossIncome').innerText = grossIncome.toLocaleString() + ' ₺';
             document.getElementById('dTotalBudget').innerText = totalBudget.toLocaleString() + ' ₺';
         }
 
-        // --- طباعة الفاتورة والـ QR ---
         window.printSingleTx = async function(entityType, date, desc, total, paid, method, rem, invNum) {
             const uid = getUid();
             const snap = await getDoc(doc(db, "workshops", uid, "settings", "config"));
