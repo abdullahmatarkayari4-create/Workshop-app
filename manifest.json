@@ -4,8 +4,8 @@
   "display": "standalone",
   "name": "Workshop management",
   "orientation": "any",
-  "scope": "/",
+  "scope": "/Workshop-app/",
   "short_name": "WSM",
-  "start_url": "/",
+  "start_url": "/Workshop-app/",
   "theme_color": "#ffffff"
 }
