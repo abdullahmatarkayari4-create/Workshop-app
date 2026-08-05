@@ -377,10 +377,22 @@
             signOut(auth).then(() => location.reload());
         };
 
+        // تم حماية زر التصفير برمز PIN سري ثابت (يمكنك تغييره هنا، مثلاً حالياً هو: 1234)
         window.resetCloudData = async function() {
-            if(confirm("هل أنت متأكد من تصفير الحساب وبدء صفحة جديدة نظيفة؟")) {
+            const adminPin = "1234"; // يمكنك تغيير هذا الرمز إلى أي رقم تريده
+            let enteredPin = prompt("⚠️ تنبيه خطير: سيتم حذف جميع البيانات نهائياً!\n\nأدخل رمز الـ PIN السري للتأكيد:");
+            
+            if (enteredPin === null) return; // إذا قام إلغاء
+            
+            if (enteredPin !== adminPin) {
+                alert("❌ رمز الـ PIN غير صحيح! تم إلغاء عملية التصفير حمايةً لبياناتك.");
+                return;
+            }
+
+            if(confirm("هل أنت متأكد تماماً؟ هذه الخطوة لا يمكن التراجع عنها بعد إدخال الرمز الصحيح!")) {
                 window.appData = { customers: [], suppliers: [], expenses: [], orders: [] };
                 await window.saveCloudData();
+                alert("تم تصفير البيانات بنجاح وبدء صفحة جديدة.");
                 location.reload();
             }
         };
@@ -831,7 +843,6 @@
 
             document.getElementById('dBeforeExp').innerText = profitBeforeExp.toLocaleString() + ' ₺';
             
-            // تحديث صافي الربح النهائي مع التحقق من الخسارة (أحمر) أو الربح (أخضر)
             let netProfitEl = document.getElementById('dNetProfit');
             let cardNetProfitEl = document.getElementById('cardNetProfit');
             netProfitEl.innerText = netProfit.toLocaleString() + ' ₺';
