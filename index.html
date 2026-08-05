@@ -3,33 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حسابات ورشة الأثاث السحابي</title>
+    <title>نظام حسابات ورشة الأثاث السحابي (هندسة متقدمة)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="shortcut icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
+    <!-- مكتبة QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #c0392b; --warning: #d35400; --bg: #f4f6f7; --card: #ffffff; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: var(--bg); color: #333; padding: 15px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1050px; margin: 0 auto; }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .sync-bar { background: #e8f4f8; border: 1px solid #bce8f1; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         
-        /* تصميم المربعات الكبيرة بجانب بعضها تماماً */
-        .dashboard { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; justify-content: flex-start; }
-        .stat-card { background: var(--card); padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.06); border-top: 6px solid var(--secondary); transition: transform 0.2s; flex: 1 1 calc(30% - 15px); min-width: 250px; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.06); border-top: 6px solid var(--secondary); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-card h3 { font-size: 15px; color: #7f8c8d; margin-bottom: 10px; font-weight: bold; }
         .stat-card .val { font-size: 26px; font-weight: bold; color: var(--primary); }
         
-        .alert-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 230px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
+        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 240px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
         .dropdown-item.danger { color: var(--danger); }
         .dropdown-item.warning { color: var(--warning); }
@@ -41,10 +40,11 @@
         form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #fafafa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e0e0e0; }
         .group { display: flex; flex-direction: column; }
         label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
         .btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 11px; }
         .btn-print { background: var(--secondary); padding: 4px 8px; font-size: 11px; }
+        .btn-whatsapp { background: #27ae60; padding: 4px 8px; font-size: 11px; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; border-radius: 4px; font-weight: bold; }
         .btn-edit { background: var(--warning); padding: 4px 8px; font-size: 11px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-back { background: #7f8c8d; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -58,6 +58,9 @@
         .sub-box { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
         .hidden { display: none !important; }
 
+        .search-box { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        .search-box input { flex: 1; min-width: 200px; }
+
         #printModal, #deliverModal {
             display: none;
             position: fixed;
@@ -69,11 +72,13 @@
         }
         .invoice-print-box {
             background: white;
-            width: 450px;
+            width: 480px;
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         @media print {
@@ -91,8 +96,8 @@
     <!-- نافذة تسجيل الدخول -->
     <div id="login-box" class="container" style="max-width: 450px; margin-top: 100px;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
-            <h1 style="font-size: 22px; color: var(--primary); margin-bottom: 15px;">تسجيل الدخول لنظام الورشة السحابي</h1>
-            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">سجل بحساب جوجل لتتم مزامنة بياناتك أوتوماتيكياً</p>
+            <h1 style="font-size: 22px; color: var(--primary); margin-bottom: 15px;">تسجيل الدخول للنظام السحابي المطور</h1>
+            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">قاعدة بيانات مهندسة بنظام Collections لخدمة الورشة لسنوات طويلة</p>
             <button type="button" onclick="loginWithGoogle()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; color: #444;">
                 <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -118,29 +123,24 @@
                     <button class="dropdown-item" onclick="switchSection('t-wages')">👷 أجور العمال</button>
                     <button class="dropdown-item" onclick="switchSection('t-exp')">💸 المصاريف</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
-                    <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات والنسخ</div>
+                    <button class="dropdown-item info" onclick="switchSection('t-settings')">⚙️ إعدادات الفاتورة والورشة</button>
+                    <button class="dropdown-item info" onclick="switchSection('t-audit')">🔍 سجل التدقيق (Audit Log)</button>
                     <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
-                    <button class="dropdown-item info" onclick="exportBackup()">📥 تصدير نسخة احتياطية</button>
-                    <button class="dropdown-item info" onclick="document.getElementById('importFile').click()">📤 استعادة نسخة احتياطية</button>
-                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBackup(event)">
-                    <button class="dropdown-item warning" onclick="resetCloudData()">🔄 تصفير البيانات السحابية</button>
                     <button class="dropdown-item danger" onclick="logout()">🚪 تسجيل الخروج</button>
                 </div>
             </div>
 
-            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي)</h1>
+            <h1 style="font-size: 15px;">ورشة الأثاث (هندسة سحابية متقدمة)</h1>
             <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ البيانات متزامنة سحابياً مع حسابك على جوجل (العملة: ليرة تركي ₺).</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ متصل بقاعدة بيانات Firestore السحابية (نظام Collections الموزع).</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
-        <!-- الشاشة الرئيسية (الداشبورد بمربعات كبيرة بجانب بعضها) -->
+        <!-- الشاشة الرئيسية (الداشبورد) -->
         <div id="t-home" class="section active">
-            <div id="deliveryAlertContainer"></div>
-
             <h2>لوحة المؤشرات العامة (Dashboard)</h2>
             <div class="dashboard" style="margin-top: 15px;">
                 <div class="stat-card"><h3>إجمالي المبيعات</h3><div class="val" id="dSales">0 ₺</div></div>
@@ -154,26 +154,56 @@
                 <div class="stat-card" id="cardTotalBudget" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
             </div>
             <div style="text-align: center; padding: 15px; color: #666; font-size: 13px;">
-                استخدم زر <b>☰ القائمة</b> في الأعلى للوصول إلى أقسام الزبائن، الموردين، الطلبات، أجور العمال والمصاريف.
+                النظام الآن يعمل بتحميل البيانات ديناميكياً لضمان أقصى سرعة مهما زادت عدد السجلات والمعاملات لسنوات طويلة.
             </div>
+        </div>
+
+        <!-- قسم إعدادات الفاتورة والورشة -->
+        <div id="t-settings" class="section">
+            <h2>⚙️ إعدادات معلومات الورشة والفاتورة والشعار</h2>
+            <form onsubmit="saveSettings(event)">
+                <div class="group"><label>اسم الورشة / المحل</label><input type="text" id="setWorkshopName" required></div>
+                <div class="group"><label>رقم الهاتف على الفاتورة</label><input type="text" id="setPhone" required></div>
+                <div class="group" style="grid-column: 1/-1;"><label>العنوان التفصيلي</label><input type="text" id="setAddress" required></div>
+                <div class="group" style="grid-column: 1/-1;"><label>رابط أو محتوى الـ QR Code</label><textarea id="setQrText" rows="2"></textarea></div>
+                <div class="group" style="grid-column: 1/-1;"><label>شعار الورشة (رفع صورة)</label><input type="file" id="setLogoFile" accept="image/*" onchange="handleLogoUpload(event)"></div>
+                <div id="logoPreviewContainer" style="grid-column: 1/-1; margin-top: 5px;"></div>
+                <div style="grid-column: 1/-1;"><button class="btn">حفظ الإعدادات سحابياً</button></div>
+            </form>
+        </div>
+
+        <!-- سجل التدقيق -->
+        <div id="t-audit" class="section">
+            <h2>🔍 سجل التدقيق (Audit Log) - تتبع التعديلات والحذف</h2>
+            <table>
+                <thead><tr><th>الوقت والتاريخ</th><th>نوع الحدث</th><th>التفاصيل</th></tr></thead>
+                <tbody id="auditTable"></tbody>
+            </table>
         </div>
 
         <!-- الزبائن -->
         <div id="t-sales" class="section">
             <div id="salesMainView">
                 <h2>قائمة الزبائن</h2>
+                <div class="search-box">
+                    <input type="text" id="searchCustomerInput" placeholder="🔍 بحث عن زبون بالاسم..." oninput="renderCustomers()">
+                </div>
                 <form onsubmit="addCustomer(event)">
                     <div class="group"><label>اسم الزبون</label><input type="text" id="newCustName" required placeholder="اسم الزبون"></div>
+                    <div class="group"><label>رقم الهاتف (للواتساب)</label><input type="text" id="newCustPhone" placeholder="مثال: 905351234567"></div>
                     <div style="display: flex; align-items: flex-end;"><button class="btn">إضافة زبون</button></div>
                 </form>
-                <table><thead><tr><th>الاسم</th><th>إجمالي المشتريات</th><th>المدفوع</th><th>الباقي (عليه)</th><th>إجراء</th></tr></thead><tbody id="customersTable"></tbody></table>
+                <table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجمالي المشتريات</th><th>المدفوع</th><th>الباقي (عليه)</th><th>إجراء</th></tr></thead><tbody id="customersTable"></tbody></table>
             </div>
             <div id="salesDetailView" style="display:none;">
                 <input type="hidden" id="activeCustId">
                 <button class="btn btn-back" onclick="backToCustomers()">← رجوع للقائمة</button>
                 <h2 id="detCustTitle">حساب الزبون: </h2>
+                <div class="search-box">
+                    <input type="text" id="searchCustTxInput" placeholder="🔍 بحث في المعاملات..." oninput="renderActiveCustomerTxs()">
+                </div>
                 <div class="sub-box">
-                    <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">1. تسجيل فاتورة بضاعة جديدة للزبون</h3>
+                    <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">تسجيل حركة جديدة للزبون</h3>
                     <form id="custActionForm" onsubmit="saveCustomerAction(event)">
                         <input type="hidden" id="editCustTxId">
                         <div class="group"><label>نوع الحركة</label>
@@ -182,10 +212,10 @@
                                 <option value="payment">دفعة مالية (قبض)</option>
                             </select>
                         </div>
-                        <div class="group"><label>التفاصيل / البيان</label><input type="text" id="billCustDesc" required placeholder="غرفة، صالون، دفعة..."></div>
+                        <div class="group"><label>التفاصيل / البيان</label><input type="text" id="billCustDesc" required placeholder="غرفة، صالون..."></div>
                         <div class="group" id="groupCustTotal"><label>قيمة الفاتورة</label><input type="number" id="billCustTotal" placeholder="0"></div>
                         <div class="group"><label>الواصل / المدفوع</label><input type="number" id="billCustPaid" value="0" required placeholder="0"></div>
-                        <div class="group"><label>طريقة الدفع / القبض</label>
+                        <div class="group"><label>طريقة الدفع</label>
                             <select id="billCustMethod">
                                 <option value="كاش">كاش</option>
                                 <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
@@ -194,12 +224,12 @@
                             </select>
                         </div>
                         <div style="grid-column: 1/-1; display:flex; gap:10px;">
-                            <button class="btn" id="custSubmitBtn">حفظ الفاتورة</button>
-                            <button type="button" class="btn btn-back" id="cancelCustEditBtn" style="display:none;" onclick="cancelCustEdit()">إلغاء التعديل</button>
+                            <button class="btn" id="custSubmitBtn">حفظ المعاملة</button>
+                            <button type="button" class="btn btn-back" id="cancelCustEditBtn" style="display:none;" onclick="cancelCustEdit()">إلغاء</button>
                         </div>
                     </form>
                 </div>
-                <table><thead><tr><th>التاريخ</th><th>البيان / العملية</th><th>قيمة البضاعة</th><th>المدفوع / المقبوض</th><th>الطريقة</th><th>الباقي</th><th>إجراء</th></tr></thead><tbody id="customerTxTable"></tbody></table>
+                <table><thead><tr><th>التاريخ</th><th>رقم الفاتورة</th><th>البيان</th><th>قيمة البضاعة</th><th>المدفوع</th><th>الطريقة</th><th>الباقي التراكمي</th><th>إجراء</th></tr></thead><tbody id="customerTxTable"></tbody></table>
             </div>
         </div>
 
@@ -207,6 +237,9 @@
         <div id="t-costs" class="section">
             <div id="suppMainView">
                 <h2>قائمة الموردين</h2>
+                <div class="search-box">
+                    <input type="text" id="searchSupplierInput" placeholder="🔍 بحث عن مورد..." oninput="renderSuppliers()">
+                </div>
                 <form onsubmit="addSupplier(event)">
                     <div class="group"><label>اسم المورد</label><input type="text" id="newSuppName" required placeholder="اسم المورد"></div>
                     <div style="display: flex; align-items: flex-end;"><button class="btn">إضافة مورد</button></div>
@@ -217,8 +250,11 @@
                 <input type="hidden" id="activeSuppId">
                 <button class="btn btn-back" onclick="backToSuppliers()">← رجوع للقائمة</button>
                 <h2 id="detSuppTitle">حساب المورد: </h2>
+                <div class="search-box">
+                    <input type="text" id="searchSuppTxInput" placeholder="🔍 بحث في المعاملات..." oninput="renderActiveSupplierTxs()">
+                </div>
                 <div class="sub-box">
-                    <h3 id="suppFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">1. تسجيل فاتورة بضاعة جديدة من المورد</h3>
+                    <h3 id="suppFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">تسجيل معاملة للمورد</h3>
                     <form id="suppActionForm" onsubmit="saveSupplierAction(event)">
                         <input type="hidden" id="editSuppTxId">
                         <div class="group"><label>نوع الحركة</label>
@@ -231,12 +267,12 @@
                         <div class="group" id="groupSuppRawTotal"><label>قيمة الفاتورة المسجلة</label><input type="number" id="billSuppTotal" placeholder="0"></div>
                         <div class="group" id="groupSuppType"><label>نوع الفاتورة</label>
                             <select id="billSuppType">
-                                <option value="عادية">عادية (بدون إضافة كرت)</option>
-                                <option value="شاملة_كرت_10">مضاف عليها كرت تقسيط 10%</option>
-                                <option value="شاملة_كرت_5">مضاف عليها كرت Tek Çekim 5%</option>
+                                <option value="عادية">عادية</option>
+                                <option value="شاملة_كرت_10">شاملة كرت تقسيط 10%</option>
+                                <option value="شاملة_كرت_5">شاملة كرت Tek Çekim 5%</option>
                             </select>
                         </div>
-                        <div class="group"><label>المبلغ المدفوع مع الحركة</label><input type="number" id="billSuppPaid" value="0" required placeholder="0"></div>
+                        <div class="group"><label>المبلغ المدفوع</label><input type="number" id="billSuppPaid" value="0" required placeholder="0"></div>
                         <div class="group"><label>طريقة الدفع</label>
                             <select id="billSuppMethod">
                                 <option value="كاش">كاش</option>
@@ -246,34 +282,43 @@
                             </select>
                         </div>
                         <div style="grid-column: 1/-1; display:flex; gap:10px;">
-                            <button class="btn" id="suppSubmitBtn">حفظ الفاتورة</button>
-                            <button type="button" class="btn btn-back" id="cancelSuppEditBtn" style="display:none;" onclick="cancelSuppEdit()">إلغاء التعديل</button>
+                            <button class="btn" id="suppSubmitBtn">حفظ المعاملة</button>
+                            <button type="button" class="btn btn-back" id="cancelSuppEditBtn" style="display:none;" onclick="cancelSuppEdit()">إلغاء</button>
                         </div>
                     </form>
                 </div>
-                <table><thead><tr><th>التاريخ</th><th>البيان / العملية</th><th>قيمة الفاتورة (حساب التاجر)</th><th>المبلغ المسدد (الصافي)</th><th>الطريقة</th><th>خسارة الكرت</th><th>الباقي للتاجر</th><th>إجراء</th></tr></thead><tbody id="supplierTxTable"></tbody></table>
+                <table><thead><tr><th>التاريخ</th><th>رقم الفاتورة</th><th>البيان</th><th>قيمة الفاتورة</th><th>المبلغ المسدد</th><th>الطريقة</th><th>خسارة الكرت</th><th>الباقي</th><th>إجراء</th></tr></thead><tbody id="supplierTxTable"></tbody></table>
             </div>
         </div>
 
         <!-- الطلبات (Siparişler) -->
         <div id="t-orders" class="section">
-            <h2 id="orderFormTitle">إدارة الطلبات (Siparişler)</h2>
+            <h2>إدارة الطلبات (Siparişler)</h2>
+            <div class="search-box">
+                <input type="text" id="searchOrderInput" placeholder="🔍 بحث عن طلب..." oninput="renderOrders()">
+                <select id="orderFilterSelect" onchange="renderOrders()" style="padding: 8px;">
+                    <option value="all">كل الطلبات</option>
+                    <option value="due_only">المتأخرة فقط ⚠️</option>
+                    <option value="completed">المكتملة ✅</option>
+                    <option value="pending">غير المسلمة ⏳</option>
+                </select>
+            </div>
             <form id="orderForm" onsubmit="saveOrder(event)">
                 <input type="hidden" id="editOrderId">
-                <div class="group"><label>اختر الزبون (الشوروم)</label><select id="orderCustSelect" required></select></div>
-                <div class="group"><label>نوع الطقم</label><input type="text" id="orderType" required placeholder="مثال: صالون مودرن / غرفة نوم"></div>
-                <div class="group"><label>سعر الطقم (ليرة)</label><input type="number" id="orderPrice" required placeholder="0"></div>
-                <div class="group"><label>تاريخ التسليم المتوقع</label><input type="date" id="orderDueDate" required></div>
-                <div class="group"><label>نوع القماش</label><input type="text" id="orderFabric" required placeholder="مثال: مخمل تركي لون بيج"></div>
-                <div class="group"><label>نوع الأرجل</label><input type="text" id="orderLegs" required placeholder="مثال: خشب زان / معدن أسود"></div>
-                <div class="group" style="grid-column: 1/-1;"><label>تفاصيل إضافية (اسم الزبون المشتري، ملاحظات...)</label><input type="text" id="orderExtra" placeholder="مثال: للزبون فلان / مع زيادة وسائد اثنين"></div>
+                <div class="group"><label>اختر الزبون</label><select id="orderCustSelect" required></select></div>
+                <div class="group"><label>نوع الطقم</label><input type="text" id="orderType" required placeholder="صالون مودرن"></div>
+                <div class="group"><label>السعر (ليرة)</label><input type="number" id="orderPrice" required placeholder="0"></div>
+                <div class="group"><label>تاريخ التسليم</label><input type="date" id="orderDueDate" required></div>
+                <div class="group"><label>نوع القماش</label><input type="text" id="orderFabric" required placeholder="مخمل بيج"></div>
+                <div class="group"><label>نوع الأرجل</label><input type="text" id="orderLegs" required placeholder="خشب زان"></div>
+                <div class="group" style="grid-column: 1/-1;"><label>تفاصيل إضافية</label><input type="text" id="orderExtra" placeholder="ملاحظات..."></div>
                 <div style="display: flex; align-items: flex-end; gap: 8px; grid-column: 1/-1;">
                     <button class="btn" id="orderSubmitBtn">إضافة طلب جديد</button>
                     <button type="button" class="btn btn-back hidden" id="cancelOrderEditBtn" onclick="cancelOrderEdit()" style="margin:0;">إلغاء</button>
                 </div>
             </form>
             <table>
-                <thead><tr><th>التاريخ</th><th>اسم الزبون (الشوروم)</th><th>نوع الطقم</th><th>السعر</th><th>تاريخ التسليم</th><th>القماش والأرجل</th><th>تفاصيل إضافية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                <thead><tr><th>التاريخ</th><th>الزبون</th><th>النوع</th><th>السعر</th><th>التسليم</th><th>القماش والأرجل</th><th>تفاصيل</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
                 <tbody id="ordersTable"></tbody>
             </table>
         </div>
@@ -287,9 +332,9 @@
                 </div>
             </div>
             <form onsubmit="addWage(event)">
-                <div class="group"><label>اسم العامل / البيان</label><input type="text" id="wageTitle" required placeholder="أجر فلان، تنجيد..."></div>
+                <div class="group"><label>اسم العامل / البيان</label><input type="text" id="wageTitle" required placeholder="أجر فلان"></div>
                 <div class="group"><label>المبلغ</label><input type="number" id="wageAmount" required placeholder="0"></div>
-                <div class="group"><label>طريقة الدفع</label>
+                <div class="group"><label>الطريقة</label>
                     <select id="wageMethod">
                         <option value="كاش">كاش</option>
                         <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
@@ -299,7 +344,7 @@
                 </div>
                 <div style="display: flex; align-items: flex-end;"><button class="btn">تسجيل الأجر</button></div>
             </form>
-            <table><thead><tr><th>التاريخ</th><th>البيان / العامل</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="wagesTable"></tbody></table>
+            <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="wagesTable"></tbody></table>
         </div>
 
         <!-- المصاريف -->
@@ -327,16 +372,21 @@
         </div>
     </div>
 
-    <!-- نافذة الطباعة المنبثقة -->
+    <!-- نافذة الطباعة -->
     <div id="printModal">
         <div class="invoice-print-box">
             <div id="printableInvoiceArea">
                 <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="font-size: 18px; color: #000; margin-bottom: 3px;">ورشة الأثاث والتنجيد</h2>
-                    <p style="font-size: 12px; color: #555;">إيصال / فاتورة معاملة</p>
+                    <div id="invLogoWrapper" style="margin-bottom: 8px;"></div>
+                    <h2 id="invHeaderTitle" style="font-size: 18px; color: #000; margin-bottom: 3px;">ورشة الأثاث والتنجيد</h2>
+                    <p id="invHeaderPhone" style="font-size: 12px; color: #333; font-weight: bold; margin-bottom: 2px;"></p>
+                    <p id="invHeaderAddress" style="font-size: 12px; color: #555;"></p>
                 </div>
                 <div style="font-size: 13px; line-height: 1.8;">
-                    <p><b>التاريخ:</b> <span id="pDate"></span></p>
+                    <div style="display: flex; justify-content: space-between;">
+                        <p><b>رقم الفاتورة:</b> <span id="pInvNum" style="color: var(--primary); font-weight:bold;"></span></p>
+                        <p><b>التاريخ:</b> <span id="pDate"></span></p>
+                    </div>
                     <p><b>اسم الحساب:</b> <span id="pEntityName"></span></p>
                     <p><b>البيان:</b> <span id="pDesc"></span></p>
                     <p><b>المبلغ الإجمالي / البضاعة:</b> <span id="pTotal"></span></p>
@@ -345,7 +395,10 @@
                     <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #ccc;">
                     <p style="font-size: 14px; font-weight: bold;"><b>المبلغ المتبقي:</b> <span id="pRem" style="color: #c0392b;"></span></p>
                 </div>
-                <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px;">
+                <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div id="qrcode" style="padding: 5px; background: white;"></div>
+                </div>
+                <div style="margin-top: 25px; display: flex; justify-content: space-between; font-size: 12px;">
                     <span>توقيع الورشة: ....................</span>
                     <span>توقيع الزبون / المورد: ....................</span>
                 </div>
@@ -360,11 +413,11 @@
     <!-- نافذة تسليم الطلب -->
     <div id="deliverModal">
         <div class="invoice-print-box" style="width: 400px;">
-            <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--primary);">تسليم الطلب وإنشاء فاتورة للزبون</h3>
+            <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--primary);">تسليم الطلب وإنشاء فاتورة</h3>
             <form id="deliverForm" onsubmit="confirmDelivery(event)">
                 <input type="hidden" id="deliverOrderId">
                 <p id="deliverInfoText" style="font-size: 13px; margin-bottom: 12px; color: #555; background: #f9f9f9; padding: 8px; border-radius: 4px;"></p>
-                <div class="group" style="margin-bottom: 10px;"><label>المبلغ المدفوع الواصل حالياً (0 إذا لم يدفع)</label><input type="number" id="deliverPaidAmount" value="0" placeholder="0"></div>
+                <div class="group" style="margin-bottom: 10px;"><label>المبلغ المدفوع حالياً</label><input type="number" id="deliverPaidAmount" value="0" placeholder="0"></div>
                 <div class="group" style="margin-bottom: 15px;"><label>طريقة الدفع</label>
                     <select id="deliverMethod">
                         <option value="كاش">كاش</option>
@@ -374,18 +427,18 @@
                     </select>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button class="btn">تأكيد التسليم وإنشاء الفاتورة</button>
+                    <button class="btn">تأكيد التسليم</button>
                     <button type="button" class="btn btn-back" onclick="closeDeliverModal()" style="margin:0;">إغلاق</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- سكربتات الاتصال السحابي Firebase -->
+    <!-- Firebase SDK Modular -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCft8hjpfugU_L4ZuSjXBd5vktRi3BFmb8",
@@ -399,73 +452,16 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const dbCloud = getFirestore(app);
+        const db = getFirestore(app);
 
         let currentUser = null;
-        window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
-
         setPersistence(auth, browserLocalPersistence).catch(err => console.error(err));
 
         window.loginWithGoogle = function() {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(error => alert("فشل تسجيل الدخول: " + error.message));
+            signInWithPopup(auth, new GoogleAuthProvider()).catch(error => alert("فشل تسجيل الدخول: " + error.message));
         };
-
         window.logout = function() {
             signOut(auth).then(() => location.reload());
-        };
-
-        window.resetCloudData = async function() {
-            const adminPin = "1234"; 
-            let enteredPin = prompt("⚠️ تنبيه خطير: سيتم حذف جميع البيانات نهائياً!\n\nأدخل رمز الـ PIN السري للتأكيد:");
-            if (enteredPin === null) return;
-            if (enteredPin !== adminPin) {
-                alert("❌ رمز الـ PIN غير صحيح! تم إلغاء عملية التصفير حمايةً لبياناتك.");
-                return;
-            }
-            if(confirm("هل أنت متأكد تماماً؟ هذه الخطوة لا يمكن التراجع عنها بعد إدخال الرمز الصحيح!")) {
-                window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
-                await window.saveCloudData();
-                alert("تم تصفير البيانات بنجاح وبدء صفحة جديدة.");
-                location.reload();
-            }
-        };
-
-        window.exportBackup = function() {
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appData, null, 2));
-            let downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `workshop_backup_${getDate()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        };
-
-        window.importBackup = function(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    let imported = JSON.parse(e.target.result);
-                    if (imported && imported.customers && imported.suppliers) {
-                        if (confirm("⚠️ هل تريد استبدال بيانات الورشة الحالية بالنسخة المستعادة؟")) {
-                            window.appData = imported;
-                            if(!window.appData.orders) window.appData.orders = [];
-                            if(!window.appData.wages) window.appData.wages = [];
-                            if(!window.appData.expenses) window.appData.expenses = [];
-                            await window.saveCloudData();
-                            alert("✅ تم استعادة النسخة الاحتياطية بنجاح!");
-                            location.reload();
-                        }
-                    } else {
-                        alert("❌ ملف النسخة الاحتياطية غير صالح!");
-                    }
-                } catch(err) {
-                    alert("❌ حدث خطأ أثناء قراءة الملف!");
-                }
-            };
-            reader.readAsText(file);
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -476,8 +472,14 @@
                 document.getElementById('userEmailDisplay').innerText = "الحساب: " + user.email;
                 loginBox.classList.add('hidden');
                 appBox.classList.remove('hidden');
-                await loadCloudData();
-                requestNotificationPermission();
+                await loadSettings();
+                updateDash();
+                renderCustomers();
+                renderSuppliers();
+                renderOrders();
+                renderWages();
+                renderExpenses();
+                renderAuditLog();
             } else {
                 currentUser = null;
                 loginBox.classList.remove('hidden');
@@ -485,242 +487,259 @@
             }
         });
 
-        async function loadCloudData() {
-            if (!currentUser) return;
-            try {
-                const docRef = doc(dbCloud, "workshops", currentUser.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    window.appData = docSnap.data();
-                    if(!window.appData.orders) window.appData.orders = [];
-                    if(!window.appData.wages) window.appData.wages = [];
-                    if(!window.appData.expenses) window.appData.expenses = [];
-                } else {
-                    window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
-                    await setDoc(docRef, window.appData);
+        // دوال المساعدة المتقدمة للـ Collections
+        window.getUid = () => currentUser ? currentUser.uid : null;
+
+        // --- الإعدادات ---
+        async function loadSettings() {
+            const uid = getUid();
+            if(!uid) return;
+            const docRef = doc(db, "workshops", uid, "settings", "config");
+            const snap = await getDoc(docRef);
+            if(snap.exists()) {
+                let st = snap.data();
+                document.getElementById('setWorkshopName').value = st.workshopName || "ورشة الأثاث والتنجيد";
+                document.getElementById('setPhone').value = st.phone || "";
+                document.getElementById('setAddress').value = st.address || "";
+                document.getElementById('setQrText').value = st.qrText || "https://wa.me/905351234567";
+                if(st.logoBase64) {
+                    document.getElementById('logoPreviewContainer').innerHTML = `<img src="${st.logoBase64}" style="max-height: 60px; border-radius: 4px; border: 1px solid #ccc;">`;
                 }
-                refreshUI();
-            } catch (e) {
-                window.appData = JSON.parse(localStorage.getItem('workshop_db_v19')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
-                if(!window.appData.orders) window.appData.orders = [];
-                if(!window.appData.wages) window.appData.wages = [];
-                if(!window.appData.expenses) window.appData.expenses = [];
-                refreshUI();
+            } else {
+                await setDoc(docRef, { workshopName: "ورشة الأثاث والتنجيد", phone: "", address: "", qrText: "https://wa.me/905351234567", logoBase64: "" });
             }
         }
-
-        window.saveCloudData = async function() {
-            refreshUI();
-            localStorage.setItem('workshop_db_v19', JSON.stringify(window.appData));
-            if (!currentUser) return;
-            try {
-                const docRef = doc(dbCloud, "workshops", currentUser.uid);
-                await setDoc(docRef, window.appData);
-            } catch (e) { console.error(e); }
+        window.handleLogoUpload = function(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                window.tempLogoBase64 = e.target.result;
+                document.getElementById('logoPreviewContainer').innerHTML = `<img src="${e.target.result}" style="max-height: 60px; border-radius: 4px; border: 1px solid #ccc;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+        window.saveSettings = async function(e) {
+            e.preventDefault();
+            const uid = getUid();
+            if(!uid) return;
+            let data = {
+                workshopName: document.getElementById('setWorkshopName').value,
+                phone: document.getElementById('setPhone').value,
+                address: document.getElementById('setAddress').value,
+                qrText: document.getElementById('setQrText').value
+            };
+            if(window.tempLogoBase64) data.logoBase64 = window.tempLogoBase64;
+            await setDoc(doc(db, "workshops", uid, "settings", "config"), data, { merge: true });
+            logAudit("تحديث إعدادات الورشة والفاتورة");
+            alert("✅ تم حفظ الإعدادات بنجاح!");
         }
 
-        function refreshUI() {
-            renderCustomers();
-            renderSuppliers();
-            renderOrders();
-            renderWages();
-            renderExpenses();
-            updateDash();
-        }
-        window.save = window.saveCloudData;
-    </script>
-
-    <!-- منطق العمليات والإشعارات وحسابات الورشة -->
-    <script>
-        function toggleMenu() {
-            let menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('show');
-        }
-        window.onclick = function(event) {
-            if (!event.target.matches('.menu-btn')) {
-                let dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (let i = 0; i < dropdowns.length; i++) {
-                    let openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-
-        function switchSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 't-orders') {
-                populateOrderCustomerSelect();
-                document.getElementById('orderDueDate').value = getDate();
-            }
-            updateDash();
-        }
-
-        function getDate() { return new Date().toISOString().split('T')[0]; }
-        function getCardLossRate(method) {
-            if (method.includes('10%')) return 0.10;
-            if (method.includes('5%')) return 0.05;
-            return 0;
-        }
-
-        // --- نظام إشعارات المتصفح والنظام (Push Notifications) ---
-        window.requestNotificationPermission = function() {
-            if (!("Notification" in window)) {
-                alert("متصفحك لا يدعم الإشعارات المنبثقة.");
-                return;
-            }
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    alert("✅ تم تفعيل الإشعارات بنجاح! سيتم تنبيهك عند وجود مواعيد تسليم.");
-                    checkDeliveryAlerts();
-                } else {
-                    alert("❌ تم رفض إذن الإشعارات. يمكنك تفعيلها لاحقاً من إعدادات المتصفح.");
-                }
+        // --- سجل التدقيق ---
+        async function logAudit(desc) {
+            const uid = getUid();
+            if(!uid) return;
+            await addDoc(collection(db, "workshops", uid, "auditLog"), {
+                date: new Date().toLocaleString(),
+                desc: desc,
+                timestamp: Date.now()
             });
+            renderAuditLog();
         }
-
-        function triggerPushNotification(title, bodyText) {
-            if (Notification.permission === "granted") {
-                try {
-                    navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification(title, {
-                            body: bodyText,
-                            icon: 'icon.png',
-                            badge: 'icon.png',
-                            dir: 'rtl',
-                            tag: 'delivery-alert'
-                        });
-                    }).catch(() => {
-                        new Notification(title, { body: bodyText, dir: 'rtl' });
-                    });
-                } catch(e) {
-                    new Notification(title, { body: bodyText, dir: 'rtl' });
-                }
-            }
-        }
-
-        // --- الزبائن ---
-        function addCustomer(e) { 
-            e.preventDefault(); 
-            let name = document.getElementById('newCustName').value;
-            window.appData.customers.push({ id: Date.now(), name: name, txs: [] }); 
-            save(); 
-            e.target.reset(); 
-        }
-        window.renderCustomers = function() {
+        window.renderAuditLog = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            const q = query(collection(db, "workshops", uid, "auditLog"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
             let html = '';
-            window.appData.customers.forEach(c => {
-                if(!c.txs) c.txs = [];
-                let tot = c.txs.reduce((a,b)=>a+b.total,0), paid = c.txs.reduce((a,b)=>a+b.paid,0), rem = tot - paid;
-                html += `<tr><td class="clickable" onclick="openCust(${c.id})"><b>${c.name}</b></td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delCust(${c.id})">حذف</button></td></tr>`;
+            snap.forEach(d => {
+                let l = d.data();
+                html += `<tr><td>${l.date}</td><td><b>تعديل</b></td><td>${l.desc}</td></tr>`;
             });
+            document.getElementById('auditTable').innerHTML = html || '<tr><td colspan="3" style="text-align:center;">لا توجد سجلات</td></tr>';
+        }
+
+        // --- الزبائن والمعاملات (Sub-collection) ---
+        window.addCustomer = async function(e) {
+            e.preventDefault();
+            const uid = getUid();
+            let name = document.getElementById('newCustName').value;
+            let phone = document.getElementById('newCustPhone').value;
+            await addDoc(collection(db, "workshops", uid, "customers"), { name, phone, createdAt: Date.now() });
+            logAudit(`إضافة زبون جديد: ${name}`);
+            e.target.reset();
+            renderCustomers();
+        }
+        window.renderCustomers = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            let searchVal = (document.getElementById('searchCustomerInput')?.value || "").toLowerCase();
+            const snap = await getDocs(collection(db, "workshops", uid, "customers"));
+            let html = '';
+            for(let docSnap of snap.docs) {
+                let c = { id: docSnap.id, ...docSnap.data() };
+                if(searchVal && !c.name.toLowerCase().includes(searchVal)) continue;
+                
+                // جلب معاملات الزبون لحساب الإجماليات
+                const txSnap = await getDocs(collection(db, "workshops", uid, "customers", c.id, "txs"));
+                let tot = 0, paid = 0;
+                txSnap.forEach(t => { let d = t.data(); tot += (d.total || 0); paid += (d.paid || 0); });
+                let rem = tot - paid;
+
+                html += `<tr><td class="clickable" onclick="openCust('${c.id}', '${c.name}', '${c.phone||''}')"><b>${c.name}</b></td><td>${c.phone || '-'}</td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delCust('${c.id}', '${c.name}')">حذف</button></td></tr>`;
+            }
             document.getElementById('customersTable').innerHTML = html;
         }
-        window.delCust = function(id) { window.appData.customers = window.appData.customers.filter(c => c.id !== id); save(); }
-        window.openCust = function(id) {
-            let c = window.appData.customers.find(x => x.id === id);
-            if(!c) return;
-            document.getElementById('activeCustId').value = c.id;
-            document.getElementById('detCustTitle').innerText = 'حساب الزبون: ' + c.name;
+        window.delCust = async function(id, name) {
+            if(!confirm(`حذف الزبون ${name}؟`)) return;
+            const uid = getUid();
+            await deleteDoc(doc(db, "workshops", uid, "customers", id));
+            logAudit(`حذف الزبون: ${name}`);
+            renderCustomers();
+            updateDash();
+        }
+        window.openCust = function(id, name, phone) {
+            document.getElementById('activeCustId').value = id;
+            document.getElementById('detCustTitle').innerText = 'حساب الزبون: ' + name;
             document.getElementById('salesMainView').style.display = 'none';
             document.getElementById('salesDetailView').style.display = 'block';
             cancelCustEdit();
-            renderCustTxs(c);
+            renderActiveCustomerTxs();
         }
-        function backToCustomers() { document.getElementById('salesDetailView').style.display = 'none'; document.getElementById('salesMainView').style.display = 'block'; refreshUI(); }
+        window.backToCustomers = function() {
+            document.getElementById('salesDetailView').style.display = 'none';
+            document.getElementById('salesMainView').style.display = 'block';
+            renderCustomers();
+            updateDash();
+        }
         window.toggleCustFormMode = function() {
             let type = document.getElementById('custTxType').value;
             let groupTot = document.getElementById('groupCustTotal');
             if(type === 'payment') { groupTot.style.display = 'none'; document.getElementById('billCustTotal').value = 0; }
             else { groupTot.style.display = 'flex'; }
         }
-        window.saveCustomerAction = function(e) {
+        window.saveCustomerAction = async function(e) {
             e.preventDefault();
-            let activeId = document.getElementById('activeCustId').value;
-            let c = window.appData.customers.find(x => x.id == activeId);
-            if(!c) return;
-            if(!c.txs) c.txs = [];
+            const uid = getUid();
+            let custId = document.getElementById('activeCustId').value;
             let editId = document.getElementById('editCustTxId').value;
             let type = document.getElementById('custTxType').value;
             let total = type === 'payment' ? 0 : parseFloat(document.getElementById('billCustTotal').value) || 0;
             let paid = parseFloat(document.getElementById('billCustPaid').value) || 0;
             let desc = document.getElementById('billCustDesc').value;
             let method = document.getElementById('billCustMethod').value;
+            let invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
+
+            const txRef = collection(db, "workshops", uid, "customers", custId, "txs");
             if(editId) {
-                let tx = c.txs.find(t => t.id == editId);
-                if(tx) { tx.desc = desc; tx.total = total; tx.paid = paid; tx.method = method; }
+                await updateDoc(doc(db, "workshops", uid, "customers", custId, "txs", editId), { desc, total, paid, method });
+                logAudit(`تعديل معاملة للزبون`);
             } else {
-                c.txs.push({ id: Date.now(), date: getDate(), desc: desc, total: total, paid: paid, method: method, cardLoss: 0 });
+                await addDoc(txRef, { invNum, date: new Date().toISOString().split('T')[0], desc, total, paid, method, timestamp: Date.now() });
+                logAudit(`إضافة معاملة جديدة للزبون`);
             }
-            save(); openCust(c.id);
+            cancelCustEdit();
+            renderActiveCustomerTxs();
+            updateDash();
         }
-        window.editCustTx = function(cid, tid) {
-            let c = window.appData.customers.find(x => x.id === cid);
-            let t = c.txs.find(x => x.id === tid);
-            if(!t) return;
-            document.getElementById('editCustTxId').value = t.id;
-            document.getElementById('custTxType').value = (t.total > 0) ? 'bill' : 'payment';
+        window.renderActiveCustomerTxs = async function() {
+            const uid = getUid();
+            let custId = document.getElementById('activeCustId').value;
+            let searchVal = (document.getElementById('searchCustTxInput')?.value || "").toLowerCase();
+            const q = query(collection(db, "workshops", uid, "customers", custId, "txs"), orderBy("timestamp", "asc"));
+            const snap = await getDocs(q);
+            let html = '';
+            let runningBal = 0;
+            snap.forEach(docSnap => {
+                let t = { id: docSnap.id, ...docSnap.data() };
+                runningBal += ((t.total || 0) - (t.paid || 0));
+                let currentRem = runningBal;
+                let rowText = `${t.date} ${t.desc} ${t.invNum}`.toLowerCase();
+                if(searchVal && !rowText.includes(searchVal)) return;
+
+                html += `<tr><td>${t.date}</td><td><b>${t.invNum || '-'}</b></td><td>${t.desc}</td><td>${t.total ? t.total.toLocaleString() + ' ₺' : '-'}</td><td>${t.paid ? t.paid.toLocaleString() + ' ₺' : '-'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('زبون', '${t.date}', '${t.desc}', '${t.total}', '${t.paid}', '${t.method}', '${currentRem}', '${t.invNum}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editCustTx('${t.id}', '${t.desc}', '${t.total}', '${t.paid}', '${t.method}')">تعديل</button> <button class="btn btn-danger" onclick="delCustTx('${t.id}')">حذف</button></td></tr>`;
+            });
+            document.getElementById('customerTxTable').innerHTML = html;
+        }
+        window.editCustTx = function(id, desc, total, paid, method) {
+            document.getElementById('editCustTxId').value = id;
+            document.getElementById('custTxType').value = (total > 0) ? 'bill' : 'payment';
             toggleCustFormMode();
-            document.getElementById('billCustDesc').value = t.desc;
-            document.getElementById('billCustTotal').value = t.total;
-            document.getElementById('billCustPaid').value = t.paid;
-            document.getElementById('billCustMethod').value = t.method;
-            document.getElementById('custFormTitle').innerText = 'تعديل المعاملة للزبون';
+            document.getElementById('billCustDesc').value = desc;
+            document.getElementById('billCustTotal').value = total;
+            document.getElementById('billCustPaid').value = paid;
+            document.getElementById('billCustMethod').value = method;
             document.getElementById('custSubmitBtn').innerText = 'تحديث المعاملة';
             document.getElementById('cancelCustEditBtn').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         window.cancelCustEdit = function() {
             document.getElementById('custActionForm').reset();
             document.getElementById('editCustTxId').value = '';
             document.getElementById('custTxType').value = 'bill';
             toggleCustFormMode();
-            document.getElementById('custFormTitle').innerText = '1. تسجيل فاتورة بضاعة جديدة للزبون';
-            document.getElementById('custSubmitBtn').innerText = 'حفظ الفاتورة';
+            document.getElementById('custSubmitBtn').innerText = 'حفظ المعاملة';
             document.getElementById('cancelCustEditBtn').style.display = 'none';
         }
-        function renderCustTxs(c) {
-            let html = '';
-            let runningBal = 0;
-            if(!c.txs) c.txs = [];
-            c.txs.forEach(t => {
-                runningBal += (t.total - t.paid);
-                let currentRem = runningBal;
-                html += `<tr><td>${t.date}</td><td>${t.desc}</td><td>${t.total ? t.total.toLocaleString() + ' ₺' : '-'}</td><td>${t.paid ? t.paid.toLocaleString() + ' ₺' : '-'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('${c.name}', '${t.date}', '${t.desc}', '${t.total}', '${t.paid}', '${t.method}', '${currentRem}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editCustTx(${c.id}, ${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delCustTx(${c.id}, ${t.id})">حذف</button></td></tr>`;
-            });
-            document.getElementById('customerTxTable').innerHTML = html;
+        window.delCustTx = async function(id) {
+            const uid = getUid();
+            let custId = document.getElementById('activeCustId').value;
+            await deleteDoc(doc(db, "workshops", uid, "customers", custId, "txs", id));
+            logAudit(`حذف معاملة للزبون`);
+            renderActiveCustomerTxs();
+            updateDash();
         }
-        window.delCustTx = function(cid, tid) { let c = window.appData.customers.find(x => x.id === cid); c.txs = c.txs.filter(t => t.id !== tid); save(); openCust(cid); }
 
-        // --- الموردين ---
-        function addSupplier(e) { 
-            e.preventDefault(); 
-            window.appData.suppliers.push({ id: Date.now(), name: document.getElementById('newSuppName').value, txs: [] }); 
-            save(); e.target.reset(); 
+        // --- الموردين والمعاملات (Sub-collection) ---
+        window.addSupplier = async function(e) {
+            e.preventDefault();
+            const uid = getUid();
+            let name = document.getElementById('newSuppName').value;
+            await addDoc(collection(db, "workshops", uid, "suppliers"), { name, createdAt: Date.now() });
+            logAudit(`إضافة مورد جديد: ${name}`);
+            e.target.reset();
+            renderSuppliers();
         }
-        window.renderSuppliers = function() {
+        window.renderSuppliers = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            let searchVal = (document.getElementById('searchSupplierInput')?.value || "").toLowerCase();
+            const snap = await getDocs(collection(db, "workshops", uid, "suppliers"));
             let html = '';
-            window.appData.suppliers.forEach(s => {
-                if(!s.txs) s.txs = [];
-                let tot = s.txs.reduce((a,b)=>a+b.supplierTotalNet,0), paid = s.txs.reduce((a,b)=>a+b.supplierPaidNet,0), rem = tot - paid;
-                html += `<tr><td class="clickable" onclick="openSupp(${s.id})"><b>${s.name}</b></td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delSupp(${s.id})">حذف</button></td></tr>`;
-            });
+            for(let docSnap of snap.docs) {
+                let s = { id: docSnap.id, ...docSnap.data() };
+                if(searchVal && !s.name.toLowerCase().includes(searchVal)) continue;
+
+                const txSnap = await getDocs(collection(db, "workshops", uid, "suppliers", s.id, "txs"));
+                let tot = 0, paid = 0;
+                txSnap.forEach(t => { let d = t.data(); tot += (d.supplierTotalNet || 0); paid += (d.supplierPaidNet || 0); });
+                let rem = tot - paid;
+
+                html += `<tr><td class="clickable" onclick="openSupp('${s.id}', '${s.name}')"><b>${s.name}</b></td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delSupp('${s.id}', '${s.name}')">حذف</button></td></tr>`;
+            }
             document.getElementById('suppliersTable').innerHTML = html;
         }
-        window.delSupp = function(id) { window.appData.suppliers = window.appData.suppliers.filter(s => s.id !== id); save(); }
-        window.openSupp = function(id) {
-            let s = window.appData.suppliers.find(x => x.id === id);
-            if(!s) return;
-            document.getElementById('activeSuppId').value = s.id;
-            document.getElementById('detSuppTitle').innerText = 'حساب المورد: ' + s.name;
+        window.delSupp = async function(id, name) {
+            if(!confirm(`حذف المورد ${name}؟`)) return;
+            const uid = getUid();
+            await deleteDoc(doc(db, "workshops", uid, "suppliers", id));
+            logAudit(`حذف المورد: ${name}`);
+            renderSuppliers();
+            updateDash();
+        }
+        window.openSupp = function(id, name) {
+            document.getElementById('activeSuppId').value = id;
+            document.getElementById('detSuppTitle').innerText = 'حساب المورد: ' + name;
             document.getElementById('suppMainView').style.display = 'none';
             document.getElementById('suppDetailView').style.display = 'block';
             cancelSuppEdit();
-            renderSuppTxs(s);
+            renderActiveSupplierTxs();
         }
-        function backToSuppliers() { document.getElementById('suppDetailView').style.display = 'none'; document.getElementById('suppMainView').style.display = 'block'; refreshUI(); }
+        window.backToSuppliers = function() {
+            document.getElementById('suppDetailView').style.display = 'none';
+            document.getElementById('suppMainView').style.display = 'block';
+            renderSuppliers();
+            updateDash();
+        }
         window.toggleSuppFormMode = function() {
             let type = document.getElementById('suppTxType').value;
             let groupRaw = document.getElementById('groupSuppRawTotal');
@@ -728,12 +747,15 @@
             if(type === 'payment') { groupRaw.style.display = 'none'; groupType.style.display = 'none'; document.getElementById('billSuppTotal').value = 0; }
             else { groupRaw.style.display = 'flex'; groupType.style.display = 'flex'; }
         }
-        window.saveSupplierAction = function(e) {
+        function getCardLossRate(method) {
+            if (method.includes('10%')) return 0.10;
+            if (method.includes('5%')) return 0.05;
+            return 0;
+        }
+        window.saveSupplierAction = async function(e) {
             e.preventDefault();
-            let activeId = document.getElementById('activeSuppId').value;
-            let s = window.appData.suppliers.find(x => x.id == activeId);
-            if(!s) return;
-            if(!s.txs) s.txs = [];
+            const uid = getUid();
+            let suppId = document.getElementById('activeSuppId').value;
             let editId = document.getElementById('editSuppTxId').value;
             let type = document.getElementById('suppTxType').value;
             let rawTotal = type === 'payment' ? 0 : (parseFloat(document.getElementById('billSuppTotal').value) || 0);
@@ -742,306 +764,399 @@
             let method = document.getElementById('billSuppMethod').value;
             let desc = document.getElementById('billSuppDesc').value;
             let payRate = getCardLossRate(method);
-            let paymentCardLoss = grossPaid * payRate;
+            let cardLoss = grossPaid * payRate;
             let supplierPaidNet = grossPaid * (1 - payRate);
             let supplierTotalNet = rawTotal;
             if(type !== 'payment') {
                 if(billType === 'شاملة_كرت_10') supplierTotalNet = rawTotal * 0.90;
                 else if(billType === 'شاملة_كرت_5') supplierTotalNet = rawTotal * 0.95;
             }
+            let invNum = "SUP-" + Math.floor(100000 + Math.random() * 900000);
+
+            const txRef = collection(db, "workshops", uid, "suppliers", suppId, "txs");
             if(editId) {
-                let tx = s.txs.find(t => t.id == editId);
-                if(tx) { tx.desc = desc; tx.supplierTotalNet = supplierTotalNet; tx.grossPaid = grossPaid; tx.supplierPaidNet = supplierPaidNet; tx.method = method; tx.cardLoss = paymentCardLoss; }
+                await updateDoc(doc(db, "workshops", uid, "suppliers", suppId, "txs", editId), { desc, supplierTotalNet, grossPaid, supplierPaidNet, method, cardLoss });
+                logAudit(`تعديل معاملة للمورد`);
             } else {
-                s.txs.push({ id: Date.now(), date: getDate(), desc: desc, supplierTotalNet: supplierTotalNet, grossPaid: grossPaid, supplierPaidNet: supplierPaidNet, method: method, cardLoss: paymentCardLoss });
+                await addDoc(txRef, { invNum, date: new Date().toISOString().split('T')[0], desc, supplierTotalNet, grossPaid, supplierPaidNet, method, cardLoss, timestamp: Date.now() });
+                logAudit(`إضافة معاملة للمورد`);
             }
-            save(); openSupp(s.id);
+            cancelSuppEdit();
+            renderActiveSupplierTxs();
+            updateDash();
         }
-        window.editSuppTx = function(sid, tid) {
-            let s = window.appData.suppliers.find(x => x.id === sid);
-            let t = s.txs.find(x => x.id === tid);
-            if(!t) return;
-            document.getElementById('editSuppTxId').value = t.id;
-            let isPayment = (t.supplierTotalNet === 0);
-            document.getElementById('suppTxType').value = isPayment ? 'payment' : 'bill';
+        window.renderActiveSupplierTxs = async function() {
+            const uid = getUid();
+            let suppId = document.getElementById('activeSuppId').value;
+            let searchVal = (document.getElementById('searchSuppTxInput')?.value || "").toLowerCase();
+            const q = query(collection(db, "workshops", uid, "suppliers", suppId, "txs"), orderBy("timestamp", "asc"));
+            const snap = await getDocs(q);
+            let html = '';
+            let runningBal = 0;
+            snap.forEach(docSnap => {
+                let t = { id: docSnap.id, ...docSnap.data() };
+                runningBal += ((t.supplierTotalNet || 0) - (t.supplierPaidNet || 0));
+                let currentRem = runningBal;
+                let rowText = `${t.date} ${t.desc} ${t.invNum}`.toLowerCase();
+                if(searchVal && !rowText.includes(searchVal)) return;
+
+                html += `<tr><td>${t.date}</td><td><b>${t.invNum || '-'}</b></td><td>${t.desc}</td><td>${t.supplierTotalNet ? t.supplierTotalNet.toLocaleString() + ' ₺' : '-'}</td><td>${t.supplierPaidNet ? t.supplierPaidNet.toLocaleString() + ' ₺' : '0'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="color:var(--warning);">${t.cardLoss ? t.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('مورد', '${t.date}', '${t.desc}', '${t.supplierTotalNet}', '${t.supplierPaidNet}', '${t.method}', '${currentRem}', '${t.invNum}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editSuppTx('${t.id}', '${t.desc}', '${t.supplierTotalNet}', '${t.grossPaid}', '${t.method}')">تعديل</button> <button class="btn btn-danger" onclick="delSuppTx('${t.id}')">حذف</button></td></tr>`;
+            });
+            document.getElementById('supplierTxTable').innerHTML = html;
+        }
+        window.editSuppTx = function(id, desc, total, paid, method) {
+            document.getElementById('editSuppTxId').value = id;
+            document.getElementById('suppTxType').value = (total > 0) ? 'bill' : 'payment';
             toggleSuppFormMode();
-            document.getElementById('billSuppDesc').value = t.desc;
-            document.getElementById('billSuppTotal').value = t.supplierTotalNet;
-            document.getElementById('billSuppPaid').value = t.grossPaid;
-            document.getElementById('billSuppMethod').value = t.method;
-            document.getElementById('suppFormTitle').innerText = 'تعديل المعاملة للمورد';
+            document.getElementById('billSuppDesc').value = desc;
+            document.getElementById('billSuppTotal').value = total;
+            document.getElementById('billSuppPaid').value = paid;
+            document.getElementById('billSuppMethod').value = method;
             document.getElementById('suppSubmitBtn').innerText = 'تحديث المعاملة';
             document.getElementById('cancelSuppEditBtn').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         window.cancelSuppEdit = function() {
             document.getElementById('suppActionForm').reset();
             document.getElementById('editSuppTxId').value = '';
             document.getElementById('suppTxType').value = 'bill';
             toggleSuppFormMode();
-            document.getElementById('suppFormTitle').innerText = '1. تسجيل فاتورة بضاعة جديدة للمورد';
-            document.getElementById('suppSubmitBtn').innerText = 'حفظ الفاتورة';
+            document.getElementById('suppSubmitBtn').innerText = 'حفظ المعاملة';
             document.getElementById('cancelSuppEditBtn').style.display = 'none';
         }
-        function renderSuppTxs(s) {
-            let html = '';
-            let runningBal = 0;
-            if(!s.txs) s.txs = [];
-            s.txs.forEach(t => {
-                let totNet = t.supplierTotalNet !== undefined ? t.supplierTotalNet : 0;
-                let paidNet = t.supplierPaidNet !== undefined ? t.supplierPaidNet : 0;
-                runningBal += (totNet - paidNet);
-                let currentRem = runningBal;
-                html += `<tr><td>${t.date}</td><td>${t.desc}</td><td>${totNet ? totNet.toLocaleString() + ' ₺' : '-'}</td><td>${paidNet ? paidNet.toLocaleString() + ' ₺' : '0'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="color:var(--warning);">${t.cardLoss ? t.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('${s.name}', '${t.date}', '${t.desc}', '${totNet}', '${paidNet}', '${t.method}', '${currentRem}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editSuppTx(${s.id}, ${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delSuppTx(${s.id}, ${t.id})">حذف</button></td></tr>`;
-            });
-            document.getElementById('supplierTxTable').innerHTML = html;
+        window.delSuppTx = async function(id) {
+            const uid = getUid();
+            let suppId = document.getElementById('activeSuppId').value;
+            await deleteDoc(doc(db, "workshops", uid, "suppliers", suppId, "txs", id));
+            logAudit(`حذف معاملة للمورد`);
+            renderActiveSupplierTxs();
+            updateDash();
         }
-        window.delSuppTx = function(sid, tid) { let s = window.appData.suppliers.find(x => x.id === sid); s.txs = s.txs.filter(t => t.id !== tid); save(); openSupp(sid); }
 
-        // --- الطلبات (Siparişler) ---
-        function populateOrderCustomerSelect() {
+        // --- الطلبات (Collection مستقلة) ---
+        async function populateOrderCustomerSelect() {
+            const uid = getUid();
             let select = document.getElementById('orderCustSelect');
             select.innerHTML = '';
-            if(!window.appData.customers || window.appData.customers.length === 0) {
-                let opt = document.createElement('option'); opt.value = ""; opt.textContent = "لا يوجد زبائن، أضف زبوناً أولاً"; select.appendChild(opt); return;
+            const snap = await getDocs(collection(db, "workshops", uid, "customers"));
+            if(snap.empty) {
+                select.innerHTML = '<option value="">لا يوجد زبائن</option>';
+                return;
             }
-            window.appData.customers.forEach(c => {
-                let opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name; select.appendChild(opt);
+            snap.forEach(d => {
+                let c = d.data();
+                select.innerHTML += `<option value="${d.id}">${c.name}</option>`;
             });
         }
-        window.saveOrder = function(e) {
-            e.preventDefault();
-            if(!window.appData.customers || window.appData.customers.length === 0) { alert("الرجاء إضافة زبون في قسم الزبائن أولاً!"); return; }
-            let custId = parseInt(document.getElementById('orderCustSelect').value);
-            let customer = window.appData.customers.find(c => c.id === custId);
-            if(!customer) return;
-            let editId = document.getElementById('editOrderId').value;
-            let type = document.getElementById('orderType').value;
-            let price = parseFloat(document.getElementById('orderPrice').value) || 0;
-            let dueDate = document.getElementById('orderDueDate').value || getDate();
-            let fabric = document.getElementById('orderFabric').value;
-            let legs = document.getElementById('orderLegs').value;
-            let extra = document.getElementById('orderExtra').value;
-            if(!window.appData.orders) window.appData.orders = [];
-            if(editId) {
-                let order = window.appData.orders.find(o => o.id == editId);
-                if(order) { order.customerId = custId; order.customerName = customer.name; order.type = type; order.price = price; order.dueDate = dueDate; order.fabric = fabric; order.legs = legs; order.extra = extra; }
-            } else {
-                window.appData.orders.push({ id: Date.now(), date: getDate(), customerId: custId, customerName: customer.name, type: type, price: price, dueDate: dueDate, fabric: fabric, legs: legs, extra: extra, status: 'غير مُسلَم' });
+        window.switchSection = function(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 't-orders') {
+                populateOrderCustomerSelect();
+                document.getElementById('orderDueDate').value = new Date().toISOString().split('T')[0];
             }
-            save(); cancelOrderEdit();
+            updateDash();
         }
-        window.editOrder = function(id) {
-            let order = window.appData.orders.find(o => o.id === id);
-            if(!order) return;
-            populateOrderCustomerSelect();
-            document.getElementById('editOrderId').value = order.id;
-            document.getElementById('orderCustSelect').value = order.customerId;
-            document.getElementById('orderType').value = order.type;
-            document.getElementById('orderPrice').value = order.price;
-            document.getElementById('orderDueDate').value = order.dueDate || getDate();
-            document.getElementById('orderFabric').value = order.fabric;
-            document.getElementById('orderLegs').value = order.legs;
-            document.getElementById('orderExtra').value = order.extra || '';
-            document.getElementById('orderFormTitle').innerText = 'تعديل الطلب (Sipariş)';
+        window.saveOrder = async function(e) {
+            e.preventDefault();
+            const uid = getUid();
+            let custId = document.getElementById('orderCustSelect').value;
+            let custOption = document.getElementById('orderCustSelect').selectedOptions[0];
+            let customerName = custOption ? custOption.text : "";
+            let editId = document.getElementById('editOrderId').value;
+
+            let orderData = {
+                customerId: custId,
+                customerName: customerName,
+                type: document.getElementById('orderType').value,
+                price: parseFloat(document.getElementById('orderPrice').value) || 0,
+                dueDate: document.getElementById('orderDueDate').value,
+                fabric: document.getElementById('orderFabric').value,
+                legs: document.getElementById('orderLegs').value,
+                extra: document.getElementById('orderExtra').value,
+                status: 'غير مُسلَم',
+                timestamp: Date.now()
+            };
+
+            if(editId) {
+                await updateDoc(doc(db, "workshops", uid, "orders", editId), orderData);
+                logAudit(`تعديل طلب`);
+            } else {
+                orderData.date = new Date().toISOString().split('T')[0];
+                await addDoc(collection(db, "workshops", uid, "orders"), orderData);
+                logAudit(`إضافة طلب جديد`);
+            }
+            cancelOrderEdit();
+            renderOrders();
+        }
+        window.renderOrders = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            let searchVal = (document.getElementById('searchOrderInput')?.value || "").toLowerCase();
+            let filterVal = document.getElementById('orderFilterSelect')?.value || "all";
+            let today = new Date().toISOString().split('T')[0];
+
+            const snap = await getDocs(collection(db, "workshops", uid, "orders"));
+            let html = '';
+            snap.forEach(docSnap => {
+                let o = { id: docSnap.id, ...docSnap.data() };
+                let isCompleted = o.status === 'مكتمل';
+                let isDue = (!isCompleted && o.dueDate && o.dueDate <= today);
+
+                if(filterVal === 'due_only' && !isDue) return;
+                if(filterVal === 'completed' && !isCompleted) return;
+                if(filterVal === 'pending' && isCompleted) return;
+
+                let rowText = `${o.customerName} ${o.type} ${o.dueDate} ${o.fabric}`.toLowerCase();
+                if(searchVal && !rowText.includes(searchVal)) return;
+
+                let dueClass = isDue ? 'color: var(--danger); font-weight: bold;' : '';
+                html += `<tr><td>${o.date}</td><td><b>${o.customerName}</b></td><td>${o.type}</td><td>${o.price.toLocaleString()} ₺</td><td style="${dueClass}">${o.dueDate || '-'}</td><td>قماش: ${o.fabric}<br>أرجل: ${o.legs}</td><td>${o.extra || '-'}</td><td><span class="badge" style="background:${isCompleted ? 'var(--success)' : 'var(--warning)'};">${o.status}</span></td><td>${!isCompleted ? `<button class="btn" style="padding:4px 8px; font-size:11px;" onclick="openDeliverModal('${o.id}', '${o.customerId}', '${o.customerName}', '${o.type}', ${o.price}, '${o.fabric}', '${o.legs}', '${o.extra||''}')">تسليم</button>` : 'تم التسليم'} <button class="btn-edit" onclick="editOrder('${o.id}')">تعديل</button> <button class="btn btn-danger" onclick="delOrder('${o.id}')">حذف</button></td></tr>`;
+            });
+            document.getElementById('ordersTable').innerHTML = html;
+        }
+        window.editOrder = async function(id) {
+            const uid = getUid();
+            let docSnap = await getDoc(doc(db, "workshops", uid, "orders", id));
+            if(!docSnap.exists()) return;
+            let o = docSnap.data();
+            await populateOrderCustomerSelect();
+            document.getElementById('editOrderId').value = id;
+            document.getElementById('orderCustSelect').value = o.customerId;
+            document.getElementById('orderType').value = o.type;
+            document.getElementById('orderPrice').value = o.price;
+            document.getElementById('orderDueDate').value = o.dueDate;
+            document.getElementById('orderFabric').value = o.fabric;
+            document.getElementById('orderLegs').value = o.legs;
+            document.getElementById('orderExtra').value = o.extra || '';
             document.getElementById('orderSubmitBtn').innerText = 'تحديث الطلب';
             document.getElementById('cancelOrderEditBtn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         window.cancelOrderEdit = function() {
             document.getElementById('orderForm').reset();
             document.getElementById('editOrderId').value = '';
-            document.getElementById('orderFormTitle').innerText = 'إدارة الطلبات (Siparişler)';
             document.getElementById('orderSubmitBtn').innerText = 'إضافة طلب جديد';
             document.getElementById('cancelOrderEditBtn').classList.add('hidden');
-            populateOrderCustomerSelect();
-            document.getElementById('orderDueDate').value = getDate();
         }
-        window.renderOrders = function() {
-            let html = '';
-            if(!window.appData.orders) window.appData.orders = [];
-            window.appData.orders.forEach(o => {
-                let isCompleted = o.status === 'مكتمل';
-                let dueClass = (!isCompleted && o.dueDate && o.dueDate <= getDate()) ? 'color: var(--danger); font-weight: bold;' : '';
-                html += `<tr><td>${o.date}</td><td><b>${o.customerName}</b></td><td>${o.type}</td><td>${o.price.toLocaleString()} ₺</td><td style="${dueClass}">${o.dueDate || '-'}</td><td>قماش: ${o.fabric}<br>أرجل: ${o.legs}</td><td>${o.extra ? o.extra : '<span style="color:#aaa;">-</span>'}</td><td><span class="badge" style="background:${isCompleted ? 'var(--success)' : 'var(--warning)'};">${o.status}</span></td><td>${!isCompleted ? `<button class="btn" style="padding:4px 8px; font-size:11px;" onclick="openDeliverModal(${o.id})">تسليم</button>` : '<span style="color:#7f8c8d; font-size:11px; font-weight:bold;">تم التسليم</span>'} <button class="btn-edit" onclick="editOrder(${o.id})" style="margin-right:2px;">تعديل</button> <button class="btn btn-danger" onclick="delOrder(${o.id})" style="margin-right:2px;">حذف</button></td></tr>`;
-            });
-            document.getElementById('ordersTable').innerHTML = html;
-            checkDeliveryAlerts();
-        }
-        window.delOrder = function(id) { window.appData.orders = window.appData.orders.filter(o => o.id !== id); save(); }
-        
-        function checkDeliveryAlerts() {
-            let alertContainer = document.getElementById('deliveryAlertContainer');
-            if(!alertContainer) return;
-            let today = getDate();
-            let dueOrders = (window.appData.orders || []).filter(o => o.status === 'غير مُسلَم' && o.dueDate && o.dueDate <= today);
-            
-            if(dueOrders.length > 0) {
-                let listText = dueOrders.map(o => `• طلب الزبون ${o.customerName} (${o.type}) - موعد التسليم: ${o.dueDate}`).join('\n');
-                alertContainer.innerHTML = `<div class="alert-box"><span>⚠️ تنبيه هام: يوجد (${dueOrders.length}) طلبات مستحقة التسليم اليوم أو متأخرة:<br>${dueOrders.map(o => `• طلب الزبون <b>${o.customerName}</b> (${o.type}) - موعد التسليم: ${o.dueDate}`).join('<br>')}</span></div>`;
-                
-                let lastNotifiedDate = localStorage.getItem('last_notified_date');
-                if (lastNotifiedDate !== today) {
-                    triggerPushNotification("تنبيه تسليم طلبيات الورشة 🔔", `يوجد لديك (${dueOrders.length}) طلبات يجب تسليمها اليوم:\n${listText}`);
-                    localStorage.setItem('last_notified_date', today);
-                }
-            } else {
-                alertContainer.innerHTML = '';
-            }
+        window.delOrder = async function(id) {
+            if(!confirm("حذف الطلب؟")) return;
+            const uid = getUid();
+            await deleteDoc(doc(db, "workshops", uid, "orders", id));
+            logAudit(`حذف طلب`);
+            renderOrders();
         }
 
-        window.openDeliverModal = function(orderId) {
-            let o = window.appData.orders.find(x => x.id === orderId);
-            if(!o) return;
-            document.getElementById('deliverOrderId').value = o.id;
-            document.getElementById('deliverInfoText').innerHTML = `الزبون: <b>${o.customerName}</b><br>الطقم: <b>${o.type}</b><br>السعر الإجمالي: <b>${o.price.toLocaleString()} ₺</b>`;
+        window.openDeliverModal = function(id, custId, custName, type, price, fabric, legs, extra) {
+            document.getElementById('deliverOrderId').value = id;
+            window.deliverDataCache = { custId, custName, type, price, fabric, legs, extra };
+            document.getElementById('deliverInfoText').innerHTML = `الزبون: <b>${custName}</b><br>الطقم: <b>${type}</b><br>السعر: <b>${price.toLocaleString()} ₺</b>`;
             document.getElementById('deliverPaidAmount').value = 0;
             document.getElementById('deliverModal').style.display = 'flex';
         }
         window.closeDeliverModal = function() { document.getElementById('deliverModal').style.display = 'none'; }
-        window.confirmDelivery = function(e) {
+        window.confirmDelivery = async function(e) {
             e.preventDefault();
-            let orderId = parseInt(document.getElementById('deliverOrderId').value);
+            const uid = getUid();
+            let orderId = document.getElementById('deliverOrderId').value;
             let paidAmount = parseFloat(document.getElementById('deliverPaidAmount').value) || 0;
             let method = document.getElementById('deliverMethod').value;
-            let order = window.appData.orders.find(x => x.id === orderId);
-            if(!order) return;
-            let customer = window.appData.customers.find(c => c.id === order.customerId);
-            if(!customer) { alert("الزبون غير موجود في القائمة!"); return; }
-            order.status = 'مكتمل';
-            if(!customer.txs) customer.txs = [];
-            customer.txs.push({ id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs} ${order.extra ? '| تفاصيل: ' + order.extra : ''}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 });
-            save(); closeDeliverModal();
-            alert("تم تسليم الطلب وتحويله بنجاح إلى فاتورة في حساب الزبون!");
+            let d = window.deliverDataCache;
+
+            // تحديث حالة الطلب
+            await updateDoc(doc(db, "workshops", uid, "orders", orderId), { status: 'مكتمل' });
+
+            // إضافة فاتورة للزبون في الـ Sub-collection الخاص به
+            let invNum = "INV-" + Math.floor(100000 + Math.random() * 900000);
+            await addDoc(collection(db, "workshops", uid, "customers", d.custId, "txs"), {
+                invNum,
+                date: new Date().toISOString().split('T')[0],
+                desc: `تسليم طلب: ${d.type} | قماش: ${d.fabric} | أرجل: ${d.legs} ${d.extra ? '| ' + d.extra : ''}`,
+                total: d.price,
+                paid: paidAmount,
+                method,
+                timestamp: Date.now()
+            });
+
+            logAudit(`تسليم طلب (${d.type}) للزبون: ${d.custName}`);
+            closeDeliverModal();
+            renderOrders();
+            updateDash();
+            alert("✅ تم تسليم الطلب وتحويله لفاتورة للزبون بنجاح!");
         }
 
-        window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
+        // --- أجور العمال (Collection مستقلة) ---
+        window.addWage = async function(e) {
+            e.preventDefault();
+            const uid = getUid();
+            let amount = parseFloat(document.getElementById('wageAmount').value);
+            let method = document.getElementById('wageMethod').value;
+            let title = document.getElementById('wageTitle').value;
+            let cardLoss = amount * getCardLossRate(method);
+
+            await addDoc(collection(db, "workshops", uid, "wages"), {
+                date: new Date().toISOString().split('T')[0],
+                title, amount, method, cardLoss, timestamp: Date.now()
+            });
+            logAudit(`تسجيل أجر عامل: ${title}`);
+            e.target.reset();
+            renderWages();
+            updateDash();
+        }
+        window.renderWages = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            const snap = await getDocs(collection(db, "workshops", uid, "wages"));
+            let html = '', total = 0;
+            snap.forEach(d => {
+                let w = { id: d.id, ...d.data() };
+                total += w.amount;
+                html += `<tr><td>${w.date}</td><td><b>${w.title}</b></td><td>${w.amount.toLocaleString()} ₺</td><td><span class="badge ${w.method=='كاش'?'c-cash':'c-card'}">${w.method}</span></td><td style="color:var(--warning);">${w.cardLoss ? w.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td><button class="btn btn-danger" onclick="delWage('${w.id}')">حذف</button></td></tr>`;
+            });
+            document.getElementById('wagesTable').innerHTML = html;
+            document.getElementById('totalWagesSum').innerText = total.toLocaleString() + ' ₺';
+        }
+        window.delWage = async function(id) {
+            const uid = getUid();
+            await deleteDoc(doc(db, "workshops", uid, "wages", id));
+            logAudit(`حذف أجر عامل`);
+            renderWages();
+            updateDash();
+        }
+
+        // --- المصاريف الثابتة (Collection مستقلة) ---
+        window.addExpense = async function(e) {
+            e.preventDefault();
+            const uid = getUid();
+            let amount = parseFloat(document.getElementById('expAmount').value);
+            let method = document.getElementById('expMethod').value;
+            let title = document.getElementById('expTitle').value;
+            let cardLoss = amount * getCardLossRate(method);
+
+            await addDoc(collection(db, "workshops", uid, "expenses"), {
+                date: new Date().toISOString().split('T')[0],
+                title, amount, method, cardLoss, timestamp: Date.now()
+            });
+            logAudit(`تسجيل مصروف: ${title}`);
+            e.target.reset();
+            renderExpenses();
+            updateDash();
+        }
+        window.renderExpenses = async function() {
+            const uid = getUid();
+            if(!uid) return;
+            const snap = await getDocs(collection(db, "workshops", uid, "expenses"));
+            let html = '', total = 0;
+            snap.forEach(d => {
+                let ex = { id: d.id, ...d.data() };
+                total += ex.amount;
+                html += `<tr><td>${ex.date}</td><td><b>${ex.title}</b></td><td>${ex.amount.toLocaleString()} ₺</td><td><span class="badge ${ex.method=='كاش'?'c-cash':'c-card'}">${ex.method}</span></td><td style="color:var(--warning);">${ex.cardLoss ? ex.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td><button class="btn btn-danger" onclick="delExp('${ex.id}')">حذف</button></td></tr>`;
+            });
+            document.getElementById('expensesTable').innerHTML = html;
+            document.getElementById('totalExpensesSum').innerText = total.toLocaleString() + ' ₺';
+        }
+        window.delExp = async function(id) {
+            const uid = getUid();
+            await deleteDoc(doc(db, "workshops", uid, "expenses", id));
+            logAudit(`حذف مصروف`);
+            renderExpenses();
+            updateDash();
+        }
+
+        // --- الداشبورد الحسابية ---
+        window.updateDash = async function() {
+            const uid = getUid();
+            if(!uid) return;
+
+            // حساب المبيعات وديون الزبائن
+            let tSales = 0, tCustDebt = 0;
+            const custSnap = await getDocs(collection(db, "workshops", uid, "customers"));
+            for(let cDoc of custSnap.docs) {
+                const txSnap = await getDocs(collection(db, "workshops", uid, "customers", cDoc.id, "txs"));
+                let cTot = 0, cPaid = 0;
+                txSnap.forEach(t => { let d = t.data(); tSales += (d.total || 0); cTot += (d.total || 0); cPaid += (d.paid || 0); });
+                tCustDebt += (cTot - cPaid);
+            }
+
+            // حساب المشتريات وديون الموردين وخسارة كروت الموردين
+            let tPurchases = 0, tSuppDebt = 0, suppCardLoss = 0;
+            const suppSnap = await getDocs(collection(db, "workshops", uid, "suppliers"));
+            for(let sDoc of suppSnap.docs) {
+                const txSnap = await getDocs(collection(db, "workshops", uid, "suppliers", sDoc.id, "txs"));
+                let sTot = 0, sPaidNet = 0;
+                txSnap.forEach(t => { 
+                    let d = t.data(); 
+                    let totNet = d.supplierTotalNet || 0;
+                    let paidNet = d.supplierPaidNet || 0;
+                    tPurchases += totNet; 
+                    sTot += totNet; 
+                    sPaidNet += paidNet; 
+                    suppCardLoss += (d.cardLoss || 0);
+                });
+                tSuppDebt += (sTot - sPaidNet);
+            }
+
+            // أجور العمال
+            let totalWages = 0, wagesCardLoss = 0;
+            const wageSnap = await getDocs(collection(db, "workshops", uid, "wages"));
+            wageSnap.forEach(d => { let w = d.data(); totalWages += w.amount; wagesCardLoss += (w.cardLoss || 0); });
+
+            // المصاريف
+            let totalExp = 0, expCardLoss = 0;
+            const expSnap = await getDocs(collection(db, "workshops", uid, "expenses"));
+            expSnap.forEach(d => { let ex = d.data(); totalExp += ex.amount; expCardLoss += (ex.cardLoss || 0); });
+
+            let totalCardLoss = suppCardLoss + wagesCardLoss + expCardLoss;
+            let grossIncome = tSales - (tPurchases + totalCardLoss);
+            let netProfit = tSales - (tPurchases + totalCardLoss + totalWages);
+            let totalBudget = tSales - (tPurchases + totalCardLoss + totalWages + totalExp);
+
+            document.getElementById('dSales').innerText = tSales.toLocaleString() + ' ₺';
+            document.getElementById('dPurchases').innerText = tPurchases.toLocaleString() + ' ₺';
+            document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
+            document.getElementById('dSuppDebt').innerText = tSuppDebt.toLocaleString() + ' ₺';
+            document.getElementById('dCardLoss').innerText = totalCardLoss.toLocaleString() + ' ₺';
+
+            document.getElementById('dNetProfit').innerText = netProfit.toLocaleString() + ' ₺';
+            document.getElementById('dGrossIncome').innerText = grossIncome.toLocaleString() + ' ₺';
+            document.getElementById('dTotalBudget').innerText = totalBudget.toLocaleString() + ' ₺';
+        }
+
+        // --- طباعة الفاتورة والـ QR ---
+        window.printSingleTx = async function(entityType, date, desc, total, paid, method, rem, invNum) {
+            const uid = getUid();
+            const snap = await getDoc(doc(db, "workshops", uid, "settings", "config"));
+            let st = snap.exists() ? snap.data() : {};
+
+            document.getElementById('invHeaderTitle').innerText = st.workshopName || "ورشة الأثاث والتنجيد";
+            document.getElementById('invHeaderPhone').innerText = st.phone ? "الهاتف: " + st.phone : "";
+            document.getElementById('invHeaderAddress').innerText = st.address ? "العنوان: " + st.address : "";
+
+            let logoWrapper = document.getElementById('invLogoWrapper');
+            if(st.logoBase64) {
+                logoWrapper.innerHTML = `<img src="${st.logoBase64}" style="max-height: 50px; margin-bottom: 5px;">`;
+            } else { logoWrapper.innerHTML = ""; }
+
+            document.getElementById('pInvNum').innerText = invNum || '-';
             document.getElementById('pDate').innerText = date;
-            document.getElementById('pEntityName').innerText = name;
+            document.getElementById('pEntityName').innerText = entityType;
             document.getElementById('pDesc').innerText = desc;
             document.getElementById('pTotal').innerText = Number(total).toLocaleString() + ' ₺';
             document.getElementById('pPaid').innerText = Number(paid).toLocaleString() + ' ₺';
             document.getElementById('pMethod').innerText = method;
             document.getElementById('pRem').innerText = Number(rem).toLocaleString() + ' ₺';
+            
+            let qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = "";
+            new QRCode(qrContainer, {
+                text: st.qrText || "https://wa.me/905351234567",
+                width: 80, height: 80,
+                colorDark : "#000000", colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
             document.getElementById('printModal').style.display = 'flex';
         }
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
-
-        // --- أجور العمال ---
-        function addWage(e) {
-            e.preventDefault();
-            let amount = parseFloat(document.getElementById('wageAmount').value);
-            let method = document.getElementById('wageMethod').value;
-            let payRate = getCardLossRate(method);
-            window.appData.wages = window.appData.wages || [];
-            window.appData.wages.push({ id: Date.now(), date: getDate(), title: document.getElementById('wageTitle').value, amount: amount, method: method, cardLoss: amount * payRate });
-            save(); e.target.reset();
-        }
-        window.renderWages = function() {
-            let html = '';
-            let totalWages = 0;
-            window.appData.wages = window.appData.wages || [];
-            window.appData.wages.forEach(w => {
-                totalWages += w.amount;
-                html += `<tr><td>${w.date}</td><td><b>${w.title}</b></td><td>${w.amount.toLocaleString()} ₺</td><td><span class="badge ${w.method=='كاش'?'c-cash':'c-card'}">${w.method}</span></td><td style="color:var(--warning);">${w.cardLoss ? w.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td><button class="btn btn-danger" onclick="delWage(${w.id})">حذف</button></td></tr>`;
-            });
-            document.getElementById('wagesTable').innerHTML = html;
-            document.getElementById('totalWagesSum').innerText = totalWages.toLocaleString() + ' ₺';
-        }
-        window.delWage = function(id) { window.appData.wages = window.appData.wages.filter(w => w.id !== id); save(); }
-
-        // --- المصاريف ---
-        function addExpense(e) {
-            e.preventDefault();
-            let amount = parseFloat(document.getElementById('expAmount').value);
-            let method = document.getElementById('expMethod').value;
-            let payRate = getCardLossRate(method);
-            window.appData.expenses = window.appData.expenses || [];
-            window.appData.expenses.push({ id: Date.now(), date: getDate(), title: document.getElementById('expTitle').value, amount: amount, method: method, cardLoss: amount * payRate });
-            save(); e.target.reset();
-        }
-        window.renderExpenses = function() {
-            let html = '';
-            let totalExp = 0;
-            window.appData.expenses = window.appData.expenses || [];
-            window.appData.expenses.forEach(ex => {
-                totalExp += ex.amount;
-                html += `<tr><td>${ex.date}</td><td><b>${ex.title}</b></td><td>${ex.amount.toLocaleString()} ₺</td><td><span class="badge ${ex.method=='كاش'?'c-cash':'c-card'}">${ex.method}</span></td><td style="color:var(--warning);">${ex.cardLoss ? ex.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td><button class="btn btn-danger" onclick="delExp(${ex.id})">حذف</button></td></tr>`;
-            });
-            document.getElementById('expensesTable').innerHTML = html;
-            document.getElementById('totalExpensesSum').innerText = totalExp.toLocaleString() + ' ₺';
-        }
-        window.delExp = function(id) { window.appData.expenses = window.appData.expenses.filter(e => e.id !== id); save(); }
-
-        // --- الداشبورد والحسابات الجديدة ---
-        window.updateDash = function() {
-            let tSales = 0, tCustDebt = 0;
-            window.appData.customers.forEach(c => {
-                if(!c.txs) c.txs = [];
-                let cTot = 0, cPaid = 0;
-                c.txs.forEach(t => { tSales += t.total; cTot += t.total; cPaid += t.paid; });
-                tCustDebt += (cTot - cPaid);
-            });
-
-            let tPurchases = 0, tSuppDebt = 0;
-            window.appData.suppliers.forEach(s => {
-                if(!s.txs) s.txs = [];
-                let sTot = 0, sPaidNet = 0;
-                s.txs.forEach(t => { 
-                    let totNet = t.supplierTotalNet !== undefined ? t.supplierTotalNet : 0;
-                    let paidNet = t.supplierPaidNet !== undefined ? t.supplierPaidNet : 0;
-                    tPurchases += totNet; sTot += totNet; sPaidNet += paidNet; 
-                });
-                tSuppDebt += (sTot - sPaidNet);
-            });
-
-            let totalWages = (window.appData.wages || []).reduce((sum, w) => sum + w.amount, 0);
-            let totalExp = (window.appData.expenses || []).reduce((sum, e) => sum + e.amount, 0);
-
-            let cLoss = window.appData.suppliers.reduce((sum, s) => {
-                if(!s.txs) s.txs = [];
-                return sum + s.txs.reduce((a,b)=>a+(b.cardLoss||0),0);
-            }, 0) + (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
-
-            // الحسابات المطلوبة بدقة:
-            // 1. الدخل الإجمالي = (إجمالي المبيعات - [المشتريات + خسارة الكروت]) فقط
-            let grossIncome = tSales - (tPurchases + cLoss);
-
-            // 2. الربح الصافي = (إجمالي المبيعات - [المشتريات + خسارة الكروت + أجور العمال]) بدون المصاريف
-            let netProfit = tSales - (tPurchases + cLoss + totalWages);
-
-            // 3. إجمالي ميزانية الورشة = (إجمالي المبيعات - [المشتريات + خسارة الكروت + أجور العمال + المصاريف])
-            let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
-
-            // عرض النتائج في الكروت
-            document.getElementById('dSales').innerText = tSales.toLocaleString() + ' ₺';
-            document.getElementById('dPurchases').innerText = tPurchases.toLocaleString() + ' ₺';
-            document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
-            document.getElementById('dSuppDebt').innerText = tSuppDebt.toLocaleString() + ' ₺';
-            document.getElementById('dCardLoss').innerText = cLoss.toLocaleString() + ' ₺';
-
-            document.getElementById('dNetProfit').innerText = netProfit.toLocaleString() + ' ₺';
-            document.getElementById('dGrossIncome').innerText = grossIncome.toLocaleString() + ' ₺';
-            document.getElementById('dTotalBudget').innerText = totalBudget.toLocaleString() + ' ₺';
-
-            // تلوين حسب الربح/الخسارة
-            let setCardColor = (elId, cardId, val) => {
-                let el = document.getElementById(elId);
-                let card = document.getElementById(cardId);
-                if(val < 0) {
-                    el.style.color = 'var(--danger)';
-                    card.style.borderTopColor = 'var(--danger)';
-                } else {
-                    el.style.color = 'var(--success)';
-                    card.style.borderTopColor = 'var(--success)';
-                }
-            };
-            setCardColor('dNetProfit', 'cardNetProfit', netProfit);
-            setCardColor('dGrossIncome', 'cardGrossIncome', grossIncome);
-            setCardColor('dTotalBudget', 'cardTotalBudget', totalBudget);
-            
-            checkDeliveryAlerts();
-        }
+        window.toggleMenu = function() { document.getElementById('dropdownMenu').classList.toggle('show'); }
     </script>
 </body>
 </html>
