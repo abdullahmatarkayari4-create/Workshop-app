@@ -16,19 +16,21 @@
         .container { max-width: 1000px; margin: 0 auto; }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .sync-bar { background: #e8f4f8; border: 1px solid #bce8f1; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--card); padding: 12px; border-radius: 6px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 4px solid var(--secondary); }
         .stat-card h3 { font-size: 12px; color: #7f8c8d; margin-bottom: 5px; }
         .stat-card .val { font-size: 16px; font-weight: bold; color: var(--primary); }
         
-        /* القائمة الجانبية المخفية */
+        .alert-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 220px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
+        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 230px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
         .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
         .dropdown-item.danger { color: var(--danger); }
         .dropdown-item.warning { color: var(--warning); }
+        .dropdown-item.info { color: #2980b9; }
 
         .section { display: none; background: var(--card); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .section.active { display: block; }
@@ -103,7 +105,6 @@
     <!-- النظام الأساسي -->
     <div id="app-box" class="container hidden">
         <header>
-            <!-- زر القائمة الجانبية (ثلاث خطوط) -->
             <div style="position: relative;">
                 <button class="menu-btn" onclick="toggleMenu()">☰ القائمة</button>
                 <div id="dropdownMenu" class="dropdown-menu">
@@ -111,9 +112,14 @@
                     <button class="dropdown-item" onclick="switchSection('t-sales')">👥 الزبائن</button>
                     <button class="dropdown-item" onclick="switchSection('t-costs')">📦 الموردين</button>
                     <button class="dropdown-item" onclick="switchSection('t-orders')">📋 الطلبات (Siparişler)</button>
+                    <button class="dropdown-item" onclick="switchSection('t-wages')">👷 أجور العمال</button>
                     <button class="dropdown-item" onclick="switchSection('t-exp')">💸 المصاريف</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
-                    <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات</div>
+                    <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات والنسخ</div>
+                    <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
+                    <button class="dropdown-item info" onclick="exportBackup()">📥 تصدير نسخة احتياطية</button>
+                    <button class="dropdown-item info" onclick="document.getElementById('importFile').click()">📤 استعادة نسخة احتياطية</button>
+                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBackup(event)">
                     <button class="dropdown-item warning" onclick="resetCloudData()">🔄 تصفير البيانات السحابية</button>
                     <button class="dropdown-item danger" onclick="logout()">🚪 تسجيل الخروج</button>
                 </div>
@@ -128,20 +134,24 @@
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
-        <!-- الشاشة الرئيسية (الداشبورد فقط) -->
+        <!-- الشاشة الرئيسية (الداشبورد) -->
         <div id="t-home" class="section active">
+            <div id="deliveryAlertContainer"></div>
+
             <h2>لوحة المؤشرات العامة (Dashboard)</h2>
             <div class="dashboard" style="margin-top: 15px;">
                 <div class="stat-card"><h3>إجمالي المبيعات</h3><div class="val" id="dSales">0 ₺</div></div>
                 <div class="stat-card"><h3>إجمالي المشتريات</h3><div class="val" id="dPurchases">0 ₺</div></div>
-                <div class="stat-card" id="cardBeforeExp" style="border-top-color: var(--secondary);"><h3>صافي الربح (بدون المصاريف)</h3><div class="val" id="dBeforeExp" style="color: var(--secondary);">0 ₺</div></div>
-                <div class="stat-card" id="cardNetProfit" style="border-top-color: var(--success);"><h3>صافي الربح النهائي</h3><div class="val" id="dNetProfit" style="color: var(--success);">0 ₺</div></div>
                 <div class="stat-card"><h3>ديون الزبائن</h3><div class="val" id="dCustDebt">0 ₺</div></div>
                 <div class="stat-card"><h3>ديون الموردين</h3><div class="val" id="dSuppDebt">0 ₺</div></div>
-                <div class="stat-card" style="border-top-color: var(--warning);"><h3>خسائر الكروت</h3><div class="val" id="dCardLoss">0 ₺</div></div>
+                <div class="stat-card" style="border-top-color: var(--warning);"><h3>خسارة الكروت</h3><div class="val" id="dCardLoss">0 ₺</div></div>
+                
+                <div class="stat-card" id="cardNetProfit" style="border-top-color: var(--success);"><h3>الربح الصافي</h3><div class="val" id="dNetProfit" style="color: var(--success);">0 ₺</div></div>
+                <div class="stat-card" id="cardGrossIncome" style="border-top-color: var(--secondary);"><h3>الدخل الإجمالي</h3><div class="val" id="dGrossIncome" style="color: var(--secondary);">0 ₺</div></div>
+                <div class="stat-card" id="cardTotalBudget" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
             </div>
             <div style="text-align: center; padding: 20px; color: #666; font-size: 13px;">
-                استخدم زر <b>☰ القائمة</b> في الأعلى للوصول إلى أقسام الزبائن، الموردين، الطلبات والمصاريف.
+                استخدم زر <b>☰ القائمة</b> في الأعلى للوصول إلى أقسام الزبائن، الموردين، الطلبات، أجور العمال والمصاريف.
             </div>
         </div>
 
@@ -250,6 +260,7 @@
                 <div class="group"><label>اختر الزبون (الشوروم)</label><select id="orderCustSelect" required></select></div>
                 <div class="group"><label>نوع الطقم</label><input type="text" id="orderType" required placeholder="مثال: صالون مودرن / غرفة نوم"></div>
                 <div class="group"><label>سعر الطقم (ليرة)</label><input type="number" id="orderPrice" required placeholder="0"></div>
+                <div class="group"><label>تاريخ التسليم المتوقع</label><input type="date" id="orderDueDate" required></div>
                 <div class="group"><label>نوع القماش</label><input type="text" id="orderFabric" required placeholder="مثال: مخمل تركي لون بيج"></div>
                 <div class="group"><label>نوع الأرجل</label><input type="text" id="orderLegs" required placeholder="مثال: خشب زان / معدن أسود"></div>
                 <div class="group" style="grid-column: 1/-1;"><label>تفاصيل إضافية (اسم الزبون المشتري، ملاحظات...)</label><input type="text" id="orderExtra" placeholder="مثال: للزبون فلان / مع زيادة وسائد اثنين"></div>
@@ -259,9 +270,33 @@
                 </div>
             </form>
             <table>
-                <thead><tr><th>التاريخ</th><th>اسم الزبون (الشوروم)</th><th>نوع الطقم</th><th>السعر</th><th>القماش والأرجل</th><th>تفاصيل إضافية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                <thead><tr><th>التاريخ</th><th>اسم الزبون (الشوروم)</th><th>نوع الطقم</th><th>السعر</th><th>تاريخ التسليم</th><th>القماش والأرجل</th><th>تفاصيل إضافية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
                 <tbody id="ordersTable"></tbody>
             </table>
+        </div>
+
+        <!-- أجور العمال -->
+        <div id="t-wages" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h2 style="margin:0; border:none; padding:0;">أجور العمال</h2>
+                <div style="background: #e8f4f8; padding: 6px 12px; border-radius: 6px; font-weight: bold; color: var(--primary); font-size: 13px;">
+                    إجمالي الأجور: <span id="totalWagesSum" style="color: var(--success);">0 ₺</span>
+                </div>
+            </div>
+            <form onsubmit="addWage(event)">
+                <div class="group"><label>اسم العامل / البيان</label><input type="text" id="wageTitle" required placeholder="أجر فلان، تنجيد..."></div>
+                <div class="group"><label>المبلغ</label><input type="number" id="wageAmount" required placeholder="0"></div>
+                <div class="group"><label>طريقة الدفع</label>
+                    <select id="wageMethod">
+                        <option value="كاش">كاش</option>
+                        <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
+                        <option value="كرت Tek Çekim 5%">كرت Tek Çekim (خصم 5%)</option>
+                        <option value="كرت Tek Çekim 0%">كرت Tek Çekim (بدون خصم)</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: flex-end;"><button class="btn">تسجيل الأجر</button></div>
+            </form>
+            <table><thead><tr><th>التاريخ</th><th>البيان / العامل</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="wagesTable"></tbody></table>
         </div>
 
         <!-- المصاريف -->
@@ -364,7 +399,7 @@
         const dbCloud = getFirestore(app);
 
         let currentUser = null;
-        window.appData = { customers: [], suppliers: [], expenses: [], orders: [] };
+        window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
 
         setPersistence(auth, browserLocalPersistence).catch(err => console.error(err));
 
@@ -377,24 +412,57 @@
             signOut(auth).then(() => location.reload());
         };
 
-        // تم حماية زر التصفير برمز PIN سري ثابت (يمكنك تغييره هنا، مثلاً حالياً هو: 1234)
         window.resetCloudData = async function() {
-            const adminPin = "1234"; // يمكنك تغيير هذا الرمز إلى أي رقم تريده
+            const adminPin = "1234"; 
             let enteredPin = prompt("⚠️ تنبيه خطير: سيتم حذف جميع البيانات نهائياً!\n\nأدخل رمز الـ PIN السري للتأكيد:");
-            
-            if (enteredPin === null) return; // إذا قام إلغاء
-            
+            if (enteredPin === null) return;
             if (enteredPin !== adminPin) {
                 alert("❌ رمز الـ PIN غير صحيح! تم إلغاء عملية التصفير حمايةً لبياناتك.");
                 return;
             }
-
             if(confirm("هل أنت متأكد تماماً؟ هذه الخطوة لا يمكن التراجع عنها بعد إدخال الرمز الصحيح!")) {
-                window.appData = { customers: [], suppliers: [], expenses: [], orders: [] };
+                window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
                 await window.saveCloudData();
                 alert("تم تصفير البيانات بنجاح وبدء صفحة جديدة.");
                 location.reload();
             }
+        };
+
+        window.exportBackup = function() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appData, null, 2));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `workshop_backup_${getDate()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        };
+
+        window.importBackup = function(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if (imported && imported.customers && imported.suppliers) {
+                        if (confirm("⚠️ هل تريد استبدال بيانات الورشة الحالية بالنسخة المستعادة؟")) {
+                            window.appData = imported;
+                            if(!window.appData.orders) window.appData.orders = [];
+                            if(!window.appData.wages) window.appData.wages = [];
+                            if(!window.appData.expenses) window.appData.expenses = [];
+                            await window.saveCloudData();
+                            alert("✅ تم استعادة النسخة الاحتياطية بنجاح!");
+                            location.reload();
+                        }
+                    } else {
+                        alert("❌ ملف النسخة الاحتياطية غير صالح!");
+                    }
+                } catch(err) {
+                    alert("❌ حدث خطأ أثناء قراءة الملف!");
+                }
+            };
+            reader.readAsText(file);
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -406,6 +474,7 @@
                 loginBox.classList.add('hidden');
                 appBox.classList.remove('hidden');
                 await loadCloudData();
+                requestNotificationPermission();
             } else {
                 currentUser = null;
                 loginBox.classList.remove('hidden');
@@ -421,21 +490,25 @@
                 if (docSnap.exists()) {
                     window.appData = docSnap.data();
                     if(!window.appData.orders) window.appData.orders = [];
+                    if(!window.appData.wages) window.appData.wages = [];
+                    if(!window.appData.expenses) window.appData.expenses = [];
                 } else {
-                    window.appData = { customers: [], suppliers: [], expenses: [], orders: [] };
+                    window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
                     await setDoc(docRef, window.appData);
                 }
                 refreshUI();
             } catch (e) {
-                window.appData = JSON.parse(localStorage.getItem('workshop_db_v17')) || { customers: [], suppliers: [], expenses: [], orders: [] };
+                window.appData = JSON.parse(localStorage.getItem('workshop_db_v19')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
                 if(!window.appData.orders) window.appData.orders = [];
+                if(!window.appData.wages) window.appData.wages = [];
+                if(!window.appData.expenses) window.appData.expenses = [];
                 refreshUI();
             }
         }
 
         window.saveCloudData = async function() {
             refreshUI();
-            localStorage.setItem('workshop_db_v17', JSON.stringify(window.appData));
+            localStorage.setItem('workshop_db_v19', JSON.stringify(window.appData));
             if (!currentUser) return;
             try {
                 const docRef = doc(dbCloud, "workshops", currentUser.uid);
@@ -447,15 +520,15 @@
             renderCustomers();
             renderSuppliers();
             renderOrders();
+            renderWages();
             renderExpenses();
             updateDash();
         }
         window.save = window.saveCloudData;
     </script>
 
-    <!-- منطق العمليات والحسابات -->
+    <!-- منطق العمليات والإشعارات وحسابات الورشة -->
     <script>
-        // إظهار/إخفاء القائمة الجانبية المنسدلة
         function toggleMenu() {
             let menu = document.getElementById('dropdownMenu');
             menu.classList.toggle('show');
@@ -477,6 +550,7 @@
             document.getElementById(id).classList.add('active');
             if(id === 't-orders') {
                 populateOrderCustomerSelect();
+                document.getElementById('orderDueDate').value = getDate();
             }
             updateDash();
         }
@@ -486,6 +560,42 @@
             if (method.includes('10%')) return 0.10;
             if (method.includes('5%')) return 0.05;
             return 0;
+        }
+
+        // --- نظام إشعارات المتصفح والنظام (Push Notifications) ---
+        window.requestNotificationPermission = function() {
+            if (!("Notification" in window)) {
+                alert("متصفحك لا يدعم الإشعارات المنبثقة.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("✅ تم تفعيل الإشعارات بنجاح! سيتم تنبيهك عند وجود مواعيد تسليم.");
+                    checkDeliveryAlerts();
+                } else {
+                    alert("❌ تم رفض إذن الإشعارات. يمكنك تفعيلها لاحقاً من إعدادات المتصفح.");
+                }
+            });
+        }
+
+        function triggerPushNotification(title, bodyText) {
+            if (Notification.permission === "granted") {
+                try {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(title, {
+                            body: bodyText,
+                            icon: 'icon.png',
+                            badge: 'icon.png',
+                            dir: 'rtl',
+                            tag: 'delivery-alert'
+                        });
+                    }).catch(() => {
+                        new Notification(title, { body: bodyText, dir: 'rtl' });
+                    });
+                } catch(e) {
+                    new Notification(title, { body: bodyText, dir: 'rtl' });
+                }
+            }
         }
 
         // --- الزبائن ---
@@ -705,15 +815,16 @@
             let editId = document.getElementById('editOrderId').value;
             let type = document.getElementById('orderType').value;
             let price = parseFloat(document.getElementById('orderPrice').value) || 0;
+            let dueDate = document.getElementById('orderDueDate').value || getDate();
             let fabric = document.getElementById('orderFabric').value;
             let legs = document.getElementById('orderLegs').value;
             let extra = document.getElementById('orderExtra').value;
             if(!window.appData.orders) window.appData.orders = [];
             if(editId) {
                 let order = window.appData.orders.find(o => o.id == editId);
-                if(order) { order.customerId = custId; order.customerName = customer.name; order.type = type; order.price = price; order.fabric = fabric; order.legs = legs; order.extra = extra; }
+                if(order) { order.customerId = custId; order.customerName = customer.name; order.type = type; order.price = price; order.dueDate = dueDate; order.fabric = fabric; order.legs = legs; order.extra = extra; }
             } else {
-                window.appData.orders.push({ id: Date.now(), date: getDate(), customerId: custId, customerName: customer.name, type: type, price: price, fabric: fabric, legs: legs, extra: extra, status: 'غير مُسلَم' });
+                window.appData.orders.push({ id: Date.now(), date: getDate(), customerId: custId, customerName: customer.name, type: type, price: price, dueDate: dueDate, fabric: fabric, legs: legs, extra: extra, status: 'غير مُسلَم' });
             }
             save(); cancelOrderEdit();
         }
@@ -725,6 +836,7 @@
             document.getElementById('orderCustSelect').value = order.customerId;
             document.getElementById('orderType').value = order.type;
             document.getElementById('orderPrice').value = order.price;
+            document.getElementById('orderDueDate').value = order.dueDate || getDate();
             document.getElementById('orderFabric').value = order.fabric;
             document.getElementById('orderLegs').value = order.legs;
             document.getElementById('orderExtra').value = order.extra || '';
@@ -740,17 +852,41 @@
             document.getElementById('orderSubmitBtn').innerText = 'إضافة طلب جديد';
             document.getElementById('cancelOrderEditBtn').classList.add('hidden');
             populateOrderCustomerSelect();
+            document.getElementById('orderDueDate').value = getDate();
         }
         window.renderOrders = function() {
             let html = '';
             if(!window.appData.orders) window.appData.orders = [];
             window.appData.orders.forEach(o => {
                 let isCompleted = o.status === 'مكتمل';
-                html += `<tr><td>${o.date}</td><td><b>${o.customerName}</b></td><td>${o.type}</td><td>${o.price.toLocaleString()} ₺</td><td>قماش: ${o.fabric}<br>أرجل: ${o.legs}</td><td>${o.extra ? o.extra : '<span style="color:#aaa;">-</span>'}</td><td><span class="badge" style="background:${isCompleted ? 'var(--success)' : 'var(--warning)'};">${o.status}</span></td><td>${!isCompleted ? `<button class="btn" style="padding:4px 8px; font-size:11px;" onclick="openDeliverModal(${o.id})">تسليم</button>` : '<span style="color:#7f8c8d; font-size:11px; font-weight:bold;">تم التسليم</span>'} <button class="btn-edit" onclick="editOrder(${o.id})" style="margin-right:2px;">تعديل</button> <button class="btn btn-danger" onclick="delOrder(${o.id})" style="margin-right:2px;">حذف</button></td></tr>`;
+                let dueClass = (!isCompleted && o.dueDate && o.dueDate <= getDate()) ? 'color: var(--danger); font-weight: bold;' : '';
+                html += `<tr><td>${o.date}</td><td><b>${o.customerName}</b></td><td>${o.type}</td><td>${o.price.toLocaleString()} ₺</td><td style="${dueClass}">${o.dueDate || '-'}</td><td>قماش: ${o.fabric}<br>أرجل: ${o.legs}</td><td>${o.extra ? o.extra : '<span style="color:#aaa;">-</span>'}</td><td><span class="badge" style="background:${isCompleted ? 'var(--success)' : 'var(--warning)'};">${o.status}</span></td><td>${!isCompleted ? `<button class="btn" style="padding:4px 8px; font-size:11px;" onclick="openDeliverModal(${o.id})">تسليم</button>` : '<span style="color:#7f8c8d; font-size:11px; font-weight:bold;">تم التسليم</span>'} <button class="btn-edit" onclick="editOrder(${o.id})" style="margin-right:2px;">تعديل</button> <button class="btn btn-danger" onclick="delOrder(${o.id})" style="margin-right:2px;">حذف</button></td></tr>`;
             });
             document.getElementById('ordersTable').innerHTML = html;
+            checkDeliveryAlerts();
         }
         window.delOrder = function(id) { window.appData.orders = window.appData.orders.filter(o => o.id !== id); save(); }
+        
+        function checkDeliveryAlerts() {
+            let alertContainer = document.getElementById('deliveryAlertContainer');
+            if(!alertContainer) return;
+            let today = getDate();
+            let dueOrders = (window.appData.orders || []).filter(o => o.status === 'غير مُسلَم' && o.dueDate && o.dueDate <= today);
+            
+            if(dueOrders.length > 0) {
+                let listText = dueOrders.map(o => `• طلب الزبون ${o.customerName} (${o.type}) - موعد التسليم: ${o.dueDate}`).join('\n');
+                alertContainer.innerHTML = `<div class="alert-box"><span>⚠️ تنبيه هام: يوجد (${dueOrders.length}) طلبات مستحقة التسليم اليوم أو متأخرة:<br>${dueOrders.map(o => `• طلب الزبون <b>${o.customerName}</b> (${o.type}) - موعد التسليم: ${o.dueDate}`).join('<br>')}</span></div>`;
+                
+                let lastNotifiedDate = localStorage.getItem('last_notified_date');
+                if (lastNotifiedDate !== today) {
+                    triggerPushNotification("تنبيه تسليم طلبيات الورشة 🔔", `يوجد لديك (${dueOrders.length}) طلبات يجب تسليمها اليوم:\n${listText}`);
+                    localStorage.setItem('last_notified_date', today);
+                }
+            } else {
+                alertContainer.innerHTML = '';
+            }
+        }
+
         window.openDeliverModal = function(orderId) {
             let o = window.appData.orders.find(x => x.id === orderId);
             if(!o) return;
@@ -776,7 +912,6 @@
             alert("تم تسليم الطلب وتحويله بنجاح إلى فاتورة في حساب الزبون!");
         }
 
-        // --- الطباعة المفردة ---
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
             document.getElementById('pDate').innerText = date;
             document.getElementById('pEntityName').innerText = name;
@@ -788,6 +923,29 @@
             document.getElementById('printModal').style.display = 'flex';
         }
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
+
+        // --- أجور العمال ---
+        function addWage(e) {
+            e.preventDefault();
+            let amount = parseFloat(document.getElementById('wageAmount').value);
+            let method = document.getElementById('wageMethod').value;
+            let payRate = getCardLossRate(method);
+            window.appData.wages = window.appData.wages || [];
+            window.appData.wages.push({ id: Date.now(), date: getDate(), title: document.getElementById('wageTitle').value, amount: amount, method: method, cardLoss: amount * payRate });
+            save(); e.target.reset();
+        }
+        window.renderWages = function() {
+            let html = '';
+            let totalWages = 0;
+            window.appData.wages = window.appData.wages || [];
+            window.appData.wages.forEach(w => {
+                totalWages += w.amount;
+                html += `<tr><td>${w.date}</td><td><b>${w.title}</b></td><td>${w.amount.toLocaleString()} ₺</td><td><span class="badge ${w.method=='كاش'?'c-cash':'c-card'}">${w.method}</span></td><td style="color:var(--warning);">${w.cardLoss ? w.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td><button class="btn btn-danger" onclick="delWage(${w.id})">حذف</button></td></tr>`;
+            });
+            document.getElementById('wagesTable').innerHTML = html;
+            document.getElementById('totalWagesSum').innerText = totalWages.toLocaleString() + ' ₺';
+        }
+        window.delWage = function(id) { window.appData.wages = window.appData.wages.filter(w => w.id !== id); save(); }
 
         // --- المصاريف ---
         function addExpense(e) {
@@ -812,7 +970,7 @@
         }
         window.delExp = function(id) { window.appData.expenses = window.appData.expenses.filter(e => e.id !== id); save(); }
 
-        // --- الداشبورد ---
+        // --- الداشبورد والحسابات الجديدة ---
         window.updateDash = function() {
             let tSales = 0, tCustDebt = 0;
             window.appData.customers.forEach(c => {
@@ -821,6 +979,7 @@
                 c.txs.forEach(t => { tSales += t.total; cTot += t.total; cPaid += t.paid; });
                 tCustDebt += (cTot - cPaid);
             });
+
             let tPurchases = 0, tSuppDebt = 0;
             window.appData.suppliers.forEach(s => {
                 if(!s.txs) s.txs = [];
@@ -832,33 +991,53 @@
                 });
                 tSuppDebt += (sTot - sPaidNet);
             });
+
+            let totalWages = (window.appData.wages || []).reduce((sum, w) => sum + w.amount, 0);
             let totalExp = (window.appData.expenses || []).reduce((sum, e) => sum + e.amount, 0);
+
             let cLoss = window.appData.suppliers.reduce((sum, s) => {
                 if(!s.txs) s.txs = [];
                 return sum + s.txs.reduce((a,b)=>a+(b.cardLoss||0),0);
-            }, 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
+            }, 0) + (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
 
-            let profitBeforeExp = tSales - (tPurchases + cLoss);
-            let netProfit = profitBeforeExp - totalExp;
+            // الحسابات المطلوبة بدقة:
+            // 1. الدخل الإجمالي = (إجمالي المبيعات - [المشتريات + خسارة الكروت]) فقط
+            let grossIncome = tSales - (tPurchases + cLoss);
 
-            document.getElementById('dBeforeExp').innerText = profitBeforeExp.toLocaleString() + ' ₺';
-            
-            let netProfitEl = document.getElementById('dNetProfit');
-            let cardNetProfitEl = document.getElementById('cardNetProfit');
-            netProfitEl.innerText = netProfit.toLocaleString() + ' ₺';
-            if (netProfit < 0) {
-                netProfitEl.style.color = 'var(--danger)';
-                cardNetProfitEl.style.borderTopColor = 'var(--danger)';
-            } else {
-                netProfitEl.style.color = 'var(--success)';
-                cardNetProfitEl.style.borderTopColor = 'var(--success)';
-            }
+            // 2. الربح الصافي = (إجمالي المبيعات - [المشتريات + خسارة الكروت + أجور العمال]) بدون المصاريف
+            let netProfit = tSales - (tPurchases + cLoss + totalWages);
 
+            // 3. إجمالي ميزانية الورشة = (إجمالي المبيعات - [المشتريات + خسارة الكروت + أجور العمال + المصاريف])
+            let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
+
+            // عرض النتائج في الكروت
             document.getElementById('dSales').innerText = tSales.toLocaleString() + ' ₺';
             document.getElementById('dPurchases').innerText = tPurchases.toLocaleString() + ' ₺';
             document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
             document.getElementById('dSuppDebt').innerText = tSuppDebt.toLocaleString() + ' ₺';
             document.getElementById('dCardLoss').innerText = cLoss.toLocaleString() + ' ₺';
+
+            document.getElementById('dNetProfit').innerText = netProfit.toLocaleString() + ' ₺';
+            document.getElementById('dGrossIncome').innerText = grossIncome.toLocaleString() + ' ₺';
+            document.getElementById('dTotalBudget').innerText = totalBudget.toLocaleString() + ' ₺';
+
+            // تلوين حسب الربح/الخسارة
+            let setCardColor = (elId, cardId, val) => {
+                let el = document.getElementById(elId);
+                let card = document.getElementById(cardId);
+                if(val < 0) {
+                    el.style.color = 'var(--danger)';
+                    card.style.borderTopColor = 'var(--danger)';
+                } else {
+                    el.style.color = 'var(--success)';
+                    card.style.borderTopColor = 'var(--success)';
+                }
+            };
+            setCardColor('dNetProfit', 'cardNetProfit', netProfit);
+            setCardColor('dGrossIncome', 'cardGrossIncome', grossIncome);
+            setCardColor('dTotalBudget', 'cardTotalBudget', totalBudget);
+            
+            checkDeliveryAlerts();
         }
     </script>
 </body>
