@@ -1,0 +1,11 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Workshop management",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "WSM",
+  "start_url": "/",
+  "theme_color": "#ffffff"
+}
