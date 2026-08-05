@@ -120,7 +120,7 @@
             </div>
 
             <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي)</h1>
-            <div style="width: 40px;"></div> <!-- لتوسيع الهيدر بشكل متوازن -->
+            <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
@@ -830,7 +830,19 @@
             let netProfit = profitBeforeExp - totalExp;
 
             document.getElementById('dBeforeExp').innerText = profitBeforeExp.toLocaleString() + ' ₺';
-            document.getElementById('dNetProfit').innerText = netProfit.toLocaleString() + ' ₺';
+            
+            // تحديث صافي الربح النهائي مع التحقق من الخسارة (أحمر) أو الربح (أخضر)
+            let netProfitEl = document.getElementById('dNetProfit');
+            let cardNetProfitEl = document.getElementById('cardNetProfit');
+            netProfitEl.innerText = netProfit.toLocaleString() + ' ₺';
+            if (netProfit < 0) {
+                netProfitEl.style.color = 'var(--danger)';
+                cardNetProfitEl.style.borderTopColor = 'var(--danger)';
+            } else {
+                netProfitEl.style.color = 'var(--success)';
+                cardNetProfitEl.style.borderTopColor = 'var(--success)';
+            }
+
             document.getElementById('dSales').innerText = tSales.toLocaleString() + ' ₺';
             document.getElementById('dPurchases').innerText = tPurchases.toLocaleString() + ' ₺';
             document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
