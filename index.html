@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام حسابات ورشة الأثاث السحابي</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax5/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- تضمين مكتبة QR Code الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="shortcut icon" href="icon.png">
@@ -17,7 +20,6 @@
         header { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .sync-bar { background: #e8f4f8; border: 1px solid #bce8f1; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         
-        /* تصميم المربعات الكبيرة للداشبورد القديمة */
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: var(--card); padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.06); border-top: 6px solid var(--secondary); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-3px); }
@@ -27,7 +29,7 @@
         .alert-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
         
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 230px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
+        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
         .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
@@ -43,6 +45,7 @@
         label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
         input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
         .btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
         .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 11px; }
         .btn-print { background: var(--secondary); padding: 4px 8px; font-size: 11px; }
         .btn-edit { background: var(--warning); padding: 4px 8px; font-size: 11px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -69,11 +72,13 @@
         }
         .invoice-print-box {
             background: white;
-            width: 450px;
+            width: 480px;
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         @media print {
@@ -117,6 +122,9 @@
                     <button class="dropdown-item" onclick="switchSection('t-orders')">📋 الطلبات (Siparişler)</button>
                     <button class="dropdown-item" onclick="switchSection('t-wages')">👷 أجور العمال</button>
                     <button class="dropdown-item" onclick="switchSection('t-exp')">💸 المصاريف</button>
+                    <button class="dropdown-item info" onclick="switchSection('t-search')">🔍 البحث الشامل</button>
+                    <button class="dropdown-item warning" onclick="switchSection('t-filter')">⚙️ الفلترة وسجل التعديلات</button>
+                    <button class="dropdown-item info" onclick="switchSection('t-invoice-settings')">📄 إعدادات الفاتورة</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
                     <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات والنسخ</div>
                     <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
@@ -154,7 +162,7 @@
                 <div class="stat-card" id="cardTotalBudget" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
             </div>
             <div style="text-align: center; padding: 15px; color: #666; font-size: 13px;">
-                استخدم زر <b>☰ القائمة</b> في الأعلى للوصول إلى أقسام الزبائن، الموردين، الطلبات، أجور العمال والمصاريف.
+                استخدم زر <b>☰ القائمة</b> في الأعلى للوصول إلى أقسام الزبائن، الموردين، الطلبات، أجور العمال، المصاريف، والبحث والفلترة.
             </div>
         </div>
 
@@ -164,9 +172,10 @@
                 <h2>قائمة الزبائن</h2>
                 <form onsubmit="addCustomer(event)">
                     <div class="group"><label>اسم الزبون</label><input type="text" id="newCustName" required placeholder="اسم الزبون"></div>
+                    <div class="group"><label>رقم الهاتف</label><input type="text" id="newCustPhone" placeholder="05xxxxxxxx"></div>
                     <div style="display: flex; align-items: flex-end;"><button class="btn">إضافة زبون</button></div>
                 </form>
-                <table><thead><tr><th>الاسم</th><th>إجمالي المشتريات</th><th>المدفوع</th><th>الباقي (عليه)</th><th>إجراء</th></tr></thead><tbody id="customersTable"></tbody></table>
+                <table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجمالي المشتريات</th><th>المدفوع</th><th>الباقي (عليه)</th><th>إجراء</th></tr></thead><tbody id="customersTable"></tbody></table>
             </div>
             <div id="salesDetailView" style="display:none;">
                 <input type="hidden" id="activeCustId">
@@ -209,9 +218,10 @@
                 <h2>قائمة الموردين</h2>
                 <form onsubmit="addSupplier(event)">
                     <div class="group"><label>اسم المورد</label><input type="text" id="newSuppName" required placeholder="اسم المورد"></div>
+                    <div class="group"><label>رقم الهاتف</label><input type="text" id="newSuppPhone" placeholder="05xxxxxxxx"></div>
                     <div style="display: flex; align-items: flex-end;"><button class="btn">إضافة مورد</button></div>
                 </form>
-                <table><thead><tr><th>الاسم</th><th>إجمالي المشتريات</th><th>المسدد</th><th>الباقي (له)</th><th>إجراء</th></tr></thead><tbody id="suppliersTable"></tbody></table>
+                <table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجمالي المشتريات</th><th>المسدد</th><th>الباقي (له)</th><th>إجراء</th></tr></thead><tbody id="suppliersTable"></tbody></table>
             </div>
             <div id="suppDetailView" style="display:none;">
                 <input type="hidden" id="activeSuppId">
@@ -325,15 +335,46 @@
             </form>
             <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="expensesTable"></tbody></table>
         </div>
+
+        <!-- 2: البحث عن الزبون - المورد - السيباريش -->
+        <div id="t-search" class="section">
+            <h2>البحث الشامل (الزبائن - الموردين - الطلبات)</h2>
+            <form onsubmit="return false;">
+                <div class="group" style="grid-column: 1/-1;"><label>ابحث عن اسم، هاتف، أو تفاصيل الطلب/البيان</label><input type="text" id="globalSearchInput" oninput="performGlobalSearch()" placeholder="اكتب للبحث الفوري..."></div>
+            </form>
+            <div id="searchResultsContainer"></div>
+        </div>
+
+        <!-- 1 & 4: الفلترة وسجل التعديلات + إعدادات الفاتورة -->
+        <div id="t-filter" class="section">
+            <h2>سجل التعديلات والعمليات (الفلترة)</h2>
+            <p style="font-size:12px; color:#666; margin-bottom:10px;">يسجل هذا القسم أي عملية تعديل، إضافة أو حذف تتم داخل النظام مع التاريخ والوقت بدقة.</p>
+            <table>
+                <thead><tr><th>التاريخ والوقت</th><th>نوع العملية</th><th>التفاصيل</th></tr></thead>
+                <tbody id="auditLogTable"></tbody>
+            </table>
+        </div>
+
+        <div id="t-invoice-settings" class="section">
+            <h2>إعدادات الفاتورة (العنوان ورقم الهاتف)</h2>
+            <p style="font-size:12px; color:#666; margin-bottom:10px;">يمكنك تعديل بيانات الورشة التي تظهر على الفواتير المطبوعة ورسائل الواتساب متى شئت.</p>
+            <form onsubmit="saveInvoiceSettings(event)">
+                <div class="group"><label>اسم الورشة / المحل في الفاتورة</label><input type="text" id="setInvTitle" required></div>
+                <div class="group"><label>رقم الهاتف الرسمي (يظهر كـ QR Code)</label><input type="text" id="setInvPhone" required placeholder="+90xxxxxxxxx"></div>
+                <div class="group" style="grid-column: 1/-1;"><label>العنوان التفصيلي</label><input type="text" id="setInvAddress" required placeholder="المدينة، المنطقة، الشارع..."></div>
+                <div style="display: flex; align-items: flex-end;"><button class="btn">حفظ إعدادات الفاتورة</button></div>
+            </form>
+        </div>
     </div>
 
-    <!-- نافذة الطباعة المنبثقة -->
+    <!-- نافذة الطباعة المنبثقة (مع دعم QR Code ورقم الهاتف والعنوان) -->
     <div id="printModal">
         <div class="invoice-print-box">
             <div id="printableInvoiceArea">
                 <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="font-size: 18px; color: #000; margin-bottom: 3px;">ورشة الأثاث والتنجيد</h2>
-                    <p style="font-size: 12px; color: #555;">إيصال / فاتورة معاملة</p>
+                    <h2 id="invHeaderTitle" style="font-size: 18px; color: #000; margin-bottom: 3px;">ورشة الأثاث والتنجيد</h2>
+                    <p id="invHeaderAddress" style="font-size: 12px; color: #555;"></p>
+                    <p id="invHeaderPhone" style="font-size: 12px; color: #555; font-weight: bold;"></p>
                 </div>
                 <div style="font-size: 13px; line-height: 1.8;">
                     <p><b>التاريخ:</b> <span id="pDate"></span></p>
@@ -345,12 +386,15 @@
                     <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #ccc;">
                     <p style="font-size: 14px; font-weight: bold;"><b>المبلغ المتبقي:</b> <span id="pRem" style="color: #c0392b;"></span></p>
                 </div>
-                <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px;">
-                    <span>توقيع الورشة: ....................</span>
-                    <span>توقيع الزبون / المورد: ....................</span>
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 12px;">
+                        <span>توقيع الورشة: ....................</span>
+                    </div>
+                    <div id="qrcode" style="padding: 5px; background: white; border: 1px solid #ddd;"></div>
                 </div>
             </div>
-            <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+            <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                <button class="btn-whatsapp" onclick="shareInvoiceWhatsApp()">مشاركة عبر واتساب 💬</button>
                 <button class="btn" onclick="window.print()">طباعة الآن</button>
                 <button class="btn btn-back" onclick="closePrintModal()" style="margin:0;">إغلاق</button>
             </div>
@@ -402,7 +446,7 @@
         const dbCloud = getFirestore(app);
 
         let currentUser = null;
-        window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
+        window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
 
         setPersistence(auth, browserLocalPersistence).catch(err => console.error(err));
 
@@ -424,7 +468,7 @@
                 return;
             }
             if(confirm("هل أنت متأكد تماماً؟ هذه الخطوة لا يمكن التراجع عنها بعد إدخال الرمز الصحيح!")) {
-                window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
+                window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
                 await window.saveCloudData();
                 alert("تم تصفير البيانات بنجاح وبدء صفحة جديدة.");
                 location.reload();
@@ -451,9 +495,7 @@
                     if (imported && imported.customers && imported.suppliers) {
                         if (confirm("⚠️ هل تريد استبدال بيانات الورشة الحالية بالنسخة المستعادة؟")) {
                             window.appData = imported;
-                            if(!window.appData.orders) window.appData.orders = [];
-                            if(!window.appData.wages) window.appData.wages = [];
-                            if(!window.appData.expenses) window.appData.expenses = [];
+                            checkMissingStructures();
                             await window.saveCloudData();
                             alert("✅ تم استعادة النسخة الاحتياطية بنجاح!");
                             location.reload();
@@ -485,6 +527,14 @@
             }
         });
 
+        function checkMissingStructures() {
+            if(!window.appData.orders) window.appData.orders = [];
+            if(!window.appData.wages) window.appData.wages = [];
+            if(!window.appData.expenses) window.appData.expenses = [];
+            if(!window.appData.logs) window.appData.logs = [];
+            if(!window.appData.invoiceSettings) window.appData.invoiceSettings = { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
+        }
+
         async function loadCloudData() {
             if (!currentUser) return;
             try {
@@ -492,26 +542,22 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     window.appData = docSnap.data();
-                    if(!window.appData.orders) window.appData.orders = [];
-                    if(!window.appData.wages) window.appData.wages = [];
-                    if(!window.appData.expenses) window.appData.expenses = [];
+                    checkMissingStructures();
                 } else {
-                    window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
+                    window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
                     await setDoc(docRef, window.appData);
                 }
                 refreshUI();
             } catch (e) {
-                window.appData = JSON.parse(localStorage.getItem('workshop_db_v19')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [] };
-                if(!window.appData.orders) window.appData.orders = [];
-                if(!window.appData.wages) window.appData.wages = [];
-                if(!window.appData.expenses) window.appData.expenses = [];
+                window.appData = JSON.parse(localStorage.getItem('workshop_db_v20')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
+                checkMissingStructures();
                 refreshUI();
             }
         }
 
         window.saveCloudData = async function() {
             refreshUI();
-            localStorage.setItem('workshop_db_v19', JSON.stringify(window.appData));
+            localStorage.setItem('workshop_db_v20', JSON.stringify(window.appData));
             if (!currentUser) return;
             try {
                 const docRef = doc(dbCloud, "workshops", currentUser.uid);
@@ -525,12 +571,14 @@
             renderOrders();
             renderWages();
             renderExpenses();
+            renderLogs();
+            loadInvoiceSettingsToForm();
             updateDash();
         }
         window.save = window.saveCloudData;
     </script>
 
-    <!-- منطق العمليات والإشعارات وحسابات الورشة -->
+    <!-- منطق العمليات والإشعارات وحسابات الورشة والفلترة والبحث والمشاركة -->
     <script>
         function toggleMenu() {
             let menu = document.getElementById('dropdownMenu');
@@ -559,10 +607,50 @@
         }
 
         function getDate() { return new Date().toISOString().split('T')[0]; }
+        function getDateTimeNow() {
+            let now = new Date();
+            return now.toISOString().split('T')[0] + ' ' + now.toTimeString().split(' ')[0];
+        }
+
+        function addLog(actionType, details) {
+            if(!window.appData.logs) window.appData.logs = [];
+            window.appData.logs.unshift({ id: Date.now(), time: getDateTimeNow(), type: actionType, details: details });
+            if(window.appData.logs.length > 100) window.appData.logs.pop(); // الحفاظ على أحدث 100 سجل
+        }
+
+        function renderLogs() {
+            let html = '';
+            if(!window.appData.logs) window.appData.logs = [];
+            window.appData.logs.forEach(l => {
+                html += `<tr><td>${l.time}</td><td><span class="badge" style="background:var(--primary);">${l.type}</span></td><td>${l.details}</td></tr>`;
+            });
+            document.getElementById('auditLogTable').innerHTML = html;
+        }
+
         function getCardLossRate(method) {
             if (method.includes('10%')) return 0.10;
             if (method.includes('5%')) return 0.05;
             return 0;
+        }
+
+        // --- إعدادات الفاتورة ---
+        function loadInvoiceSettingsToForm() {
+            let s = window.appData.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
+            document.getElementById('setInvTitle').value = s.title;
+            document.getElementById('setInvPhone').value = s.phone;
+            document.getElementById('setInvAddress').value = s.address;
+        }
+
+        window.saveInvoiceSettings = function(e) {
+            e.preventDefault();
+            window.appData.invoiceSettings = {
+                title: document.getElementById('setInvTitle').value,
+                phone: document.getElementById('setInvPhone').value,
+                address: document.getElementById('setInvAddress').value
+            };
+            addLog("تعديل إعدادات", "تم تحديث بيانات العنوان ورقم الهاتف في الفاتورة");
+            save();
+            alert("✅ تم حفظ إعدادات الفاتورة بنجاح!");
         }
 
         // --- نظام إشعارات المتصفح والنظام (Push Notifications) ---
@@ -605,7 +693,9 @@
         function addCustomer(e) { 
             e.preventDefault(); 
             let name = document.getElementById('newCustName').value;
-            window.appData.customers.push({ id: Date.now(), name: name, txs: [] }); 
+            let phone = document.getElementById('newCustPhone').value || '-';
+            window.appData.customers.push({ id: Date.now(), name: name, phone: phone, txs: [] }); 
+            addLog("إضافة زبون", `تم إضافة الزبون: ${name}`);
             save(); 
             e.target.reset(); 
         }
@@ -613,12 +703,18 @@
             let html = '';
             window.appData.customers.forEach(c => {
                 if(!c.txs) c.txs = [];
+                if(!c.phone) c.phone = '-';
                 let tot = c.txs.reduce((a,b)=>a+b.total,0), paid = c.txs.reduce((a,b)=>a+b.paid,0), rem = tot - paid;
-                html += `<tr><td class="clickable" onclick="openCust(${c.id})"><b>${c.name}</b></td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delCust(${c.id})">حذف</button></td></tr>`;
+                html += `<tr><td class="clickable" onclick="openCust(${c.id})"><b>${c.name}</b></td><td>${c.phone}</td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delCust(${c.id})">حذف</button></td></tr>`;
             });
             document.getElementById('customersTable').innerHTML = html;
         }
-        window.delCust = function(id) { window.appData.customers = window.appData.customers.filter(c => c.id !== id); save(); }
+        window.delCust = function(id) { 
+            let c = window.appData.customers.find(x => x.id === id);
+            if(c) addLog("حذف زبون", `تم حذف الزبون: ${c.name}`);
+            window.appData.customers = window.appData.customers.filter(c => c.id !== id); 
+            save(); 
+        }
         window.openCust = function(id) {
             let c = window.appData.customers.find(x => x.id === id);
             if(!c) return;
@@ -651,8 +747,10 @@
             if(editId) {
                 let tx = c.txs.find(t => t.id == editId);
                 if(tx) { tx.desc = desc; tx.total = total; tx.paid = paid; tx.method = method; }
+                addLog("تعديل معاملة زبون", `تم تعديل معاملة للزبون ${c.name} (${desc})`);
             } else {
                 c.txs.push({ id: Date.now(), date: getDate(), desc: desc, total: total, paid: paid, method: method, cardLoss: 0 });
+                addLog("إضافة معاملة زبون", `تم تسجيل ${type=='payment'?'دفعة مالية':'فاتورة'} للزبون ${c.name} بقيمة ${total || paid} ₺`);
             }
             save(); openCust(c.id);
         }
@@ -692,24 +790,40 @@
             });
             document.getElementById('customerTxTable').innerHTML = html;
         }
-        window.delCustTx = function(cid, tid) { let c = window.appData.customers.find(x => x.id === cid); c.txs = c.txs.filter(t => t.id !== tid); save(); openCust(cid); }
+        window.delCustTx = function(cid, tid) { 
+            let c = window.appData.customers.find(x => x.id === cid); 
+            c.txs = c.txs.filter(t => t.id !== tid); 
+            addLog("حذف معاملة زبون", `تم حذف معاملة من حساب الزبون ${c.name}`);
+            save(); 
+            openCust(cid); 
+        }
 
         // --- الموردين ---
         function addSupplier(e) { 
             e.preventDefault(); 
-            window.appData.suppliers.push({ id: Date.now(), name: document.getElementById('newSuppName').value, txs: [] }); 
-            save(); e.target.reset(); 
+            let name = document.getElementById('newSuppName').value;
+            let phone = document.getElementById('newSuppPhone').value || '-';
+            window.appData.suppliers.push({ id: Date.now(), name: name, phone: phone, txs: [] }); 
+            addLog("إضافة مورد", `تم إضافة المورد: ${name}`);
+            save(); 
+            e.target.reset(); 
         }
         window.renderSuppliers = function() {
             let html = '';
             window.appData.suppliers.forEach(s => {
                 if(!s.txs) s.txs = [];
+                if(!s.phone) s.phone = '-';
                 let tot = s.txs.reduce((a,b)=>a+b.supplierTotalNet,0), paid = s.txs.reduce((a,b)=>a+b.supplierPaidNet,0), rem = tot - paid;
-                html += `<tr><td class="clickable" onclick="openSupp(${s.id})"><b>${s.name}</b></td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delSupp(${s.id})">حذف</button></td></tr>`;
+                html += `<tr><td class="clickable" onclick="openSupp(${s.id})"><b>${s.name}</b></td><td>${s.phone}</td><td>${tot.toLocaleString()} ₺</td><td>${paid.toLocaleString()} ₺</td><td style="color:${rem>0?'var(--danger)':'inherit'}; font-weight:bold;">${rem.toLocaleString()} ₺</td><td><button class="btn btn-danger" onclick="delSupp(${s.id})">حذف</button></td></tr>`;
             });
             document.getElementById('suppliersTable').innerHTML = html;
         }
-        window.delSupp = function(id) { window.appData.suppliers = window.appData.suppliers.filter(s => s.id !== id); save(); }
+        window.delSupp = function(id) { 
+            let s = window.appData.suppliers.find(x => x.id === id);
+            if(s) addLog("حذف مورد", `تم حذف المورد: ${s.name}`);
+            window.appData.suppliers = window.appData.suppliers.filter(s => s.id !== id); 
+            save(); 
+        }
         window.openSupp = function(id) {
             let s = window.appData.suppliers.find(x => x.id === id);
             if(!s) return;
@@ -752,8 +866,10 @@
             if(editId) {
                 let tx = s.txs.find(t => t.id == editId);
                 if(tx) { tx.desc = desc; tx.supplierTotalNet = supplierTotalNet; tx.grossPaid = grossPaid; tx.supplierPaidNet = supplierPaidNet; tx.method = method; tx.cardLoss = paymentCardLoss; }
+                addLog("تعديل معاملة مورد", `تم تعديل معاملة للمورد ${s.name} (${desc})`);
             } else {
                 s.txs.push({ id: Date.now(), date: getDate(), desc: desc, supplierTotalNet: supplierTotalNet, grossPaid: grossPaid, supplierPaidNet: supplierPaidNet, method: method, cardLoss: paymentCardLoss });
+                addLog("إضافة معاملة مورد", `تم تسجيل ${type=='payment'?'دفعة':'فاتورة'} للمورد ${s.name}`);
             }
             save(); openSupp(s.id);
         }
@@ -796,7 +912,13 @@
             });
             document.getElementById('supplierTxTable').innerHTML = html;
         }
-        window.delSuppTx = function(sid, tid) { let s = window.appData.suppliers.find(x => x.id === sid); s.txs = s.txs.filter(t => t.id !== tid); save(); openSupp(sid); }
+        window.delSuppTx = function(sid, tid) { 
+            let s = window.appData.suppliers.find(x => x.id === sid); 
+            s.txs = s.txs.filter(t => t.id !== tid); 
+            addLog("حذف معاملة مورد", `تم حذف معاملة من حساب المورد ${s.name}`);
+            save(); 
+            openSupp(sid); 
+        }
 
         // --- الطلبات (Siparişler) ---
         function populateOrderCustomerSelect() {
@@ -826,8 +948,10 @@
             if(editId) {
                 let order = window.appData.orders.find(o => o.id == editId);
                 if(order) { order.customerId = custId; order.customerName = customer.name; order.type = type; order.price = price; order.dueDate = dueDate; order.fabric = fabric; order.legs = legs; order.extra = extra; }
+                addLog("تعديل طلب", `تم تعديل طلب (${type}) للزبون ${customer.name}`);
             } else {
                 window.appData.orders.push({ id: Date.now(), date: getDate(), customerId: custId, customerName: customer.name, type: type, price: price, dueDate: dueDate, fabric: fabric, legs: legs, extra: extra, status: 'غير مُسلَم' });
+                addLog("إضافة طلب", `تم إضافة طلب جديد (${type}) للزبون ${customer.name}`);
             }
             save(); cancelOrderEdit();
         }
@@ -868,7 +992,12 @@
             document.getElementById('ordersTable').innerHTML = html;
             checkDeliveryAlerts();
         }
-        window.delOrder = function(id) { window.appData.orders = window.appData.orders.filter(o => o.id !== id); save(); }
+        window.delOrder = function(id) { 
+            let o = window.appData.orders.find(x => x.id === id);
+            if(o) addLog("حذف طلب", `تم حذف طلب (${o.type}) للزبون ${o.customerName}`);
+            window.appData.orders = window.appData.orders.filter(o => o.id !== id); 
+            save(); 
+        }
         
         function checkDeliveryAlerts() {
             let alertContainer = document.getElementById('deliveryAlertContainer');
@@ -911,11 +1040,65 @@
             order.status = 'مكتمل';
             if(!customer.txs) customer.txs = [];
             customer.txs.push({ id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs} ${order.extra ? '| تفاصيل: ' + order.extra : ''}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 });
+            addLog("تسليم طلب", `تم تسليم الطلب (${order.type}) للزبون ${customer.name}`);
             save(); closeDeliverModal();
             alert("تم تسليم الطلب وتحويله بنجاح إلى فاتورة في حساب الزبون!");
         }
 
+        // --- 2: البحث الشامل عن الزبون - المورد - السيبيراش ---
+        window.performGlobalSearch = function() {
+            let query = document.getElementById('globalSearchInput').value.trim().toLowerCase();
+            let container = document.getElementById('searchResultsContainer');
+            if(!query) { container.innerHTML = '<p style="color:#777; font-size:13px; text-align:center; padding:15px;">اكتب كلمة مفتاحية للبحث ضمن الزبائن، الموردين، والطلبات...</p>'; return; }
+
+            let resultsHtml = '';
+
+            // بحث الزبائن
+            let matchedCusts = (window.appData.customers || []).filter(c => c.name.toLowerCase().includes(query) || (c.phone && c.phone.toLowerCase().includes(query)));
+            if(matchedCusts.length > 0) {
+                resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:10px;">الزبائن المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
+                matchedCusts.forEach(c => {
+                    resultsHtml += `<tr><td><b>${c.name}</b></td><td>${c.phone || '-'}</td><td><button class="btn" style="padding:4px 8px; font-size:11px;" onclick="switchSection('t-sales'); openCust(${c.id});">فتح الحساب</button></td></tr>`;
+                });
+                resultsHtml += `</tbody></table>`;
+            }
+
+            // بحث الموردين
+            let matchedSupps = (window.appData.suppliers || []).filter(s => s.name.toLowerCase().includes(query) || (s.phone && s.phone.toLowerCase().includes(query)));
+            if(matchedSupps.length > 0) {
+                resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الموردين المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
+                matchedSupps.forEach(s => {
+                    resultsHtml += `<tr><td><b>${s.name}</b></td><td>${s.phone || '-'}</td><td><button class="btn" style="padding:4px 8px; font-size:11px;" onclick="switchSection('t-costs'); openSupp(${s.id});">فتح الحساب</button></td></tr>`;
+                });
+                resultsHtml += `</tbody></table>`;
+            }
+
+            // بحث الطلبات (Siparişler)
+            let matchedOrders = (window.appData.orders || []).filter(o => o.customerName.toLowerCase().includes(query) || o.type.toLowerCase().includes(query) || o.fabric.toLowerCase().includes(query) || (o.extra && o.extra.toLowerCase().includes(query)));
+            if(matchedOrders.length > 0) {
+                resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الطلبات المطابقة (Siparişler):</h3><table><thead><tr><th>التاريخ</th><th>الزبون</th><th>الطقم</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>`;
+                matchedOrders.forEach(o => {
+                    resultsHtml += `<tr><td>${o.date}</td><td><b>${o.customerName}</b></td><td>${o.type}</td><td>${o.status}</td><td><button class="btn" style="padding:4px 8px; font-size:11px;" onclick="switchSection('t-orders');">عرض بالطلبات</button></td></tr>`;
+                });
+                resultsHtml += `</tbody></table>`;
+            }
+
+            if(!resultsHtml) {
+                resultsHtml = `<p style="color:var(--danger); font-size:13px; text-align:center; padding:15px; font-weight:bold;">لا توجد نتائج مطابقة لبحثك.</p>`;
+            }
+
+            container.innerHTML = resultsHtml;
+        }
+
+        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب ---
+        let lastPrintedInvoiceData = {};
+
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
+            let invSet = window.appData.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
+            document.getElementById('invHeaderTitle').innerText = invSet.title;
+            document.getElementById('invHeaderAddress').innerText = invSet.address;
+            document.getElementById('invHeaderPhone').innerText = "هاتف: " + invSet.phone;
+
             document.getElementById('pDate').innerText = date;
             document.getElementById('pEntityName').innerText = name;
             document.getElementById('pDesc').innerText = desc;
@@ -923,18 +1106,60 @@
             document.getElementById('pPaid').innerText = Number(paid).toLocaleString() + ' ₺';
             document.getElementById('pMethod').innerText = method;
             document.getElementById('pRem').innerText = Number(rem).toLocaleString() + ' ₺';
+
+            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title };
+
+            // توليد QR Code لرقم الهاتف
+            let qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            try {
+                new QRCode(qrContainer, {
+                    text: "tel:" + invSet.phone,
+                    width: 75,
+                    height: 75,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch(e) {
+                qrContainer.innerText = invSet.phone;
+            }
+
             document.getElementById('printModal').style.display = 'flex';
         }
+
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
+
+        // --- 3: مشاركة الفاتورة عبر واتساب ---
+        window.shareInvoiceWhatsApp = function() {
+            let d = lastPrintedInvoiceData;
+            if(!d.name) { alert("لا توجد بيانات فاتورة للمشاركة!"); return; }
+            let text = `📄 *${d.title || 'فاتورة ورشة الأثاث'}*\n` +
+                       `--------------------------\n` +
+                       `👤 *الحساب:* ${d.name}\n` +
+                       `📅 *التاريخ:* ${d.date}\n` +
+                       `📝 *البيان:* ${d.desc}\n` +
+                       `💰 *المبلغ الإجمالي:* ${Number(d.total).toLocaleString()} ₺\n` +
+                       `💵 *المبلغ المدفوع:* ${Number(d.paid).toLocaleString()} ₺\n` +
+                       `💳 *طريقة الدفع:* ${d.method}\n` +
+                       `🔴 *المبلغ المتبقي:* ${Number(d.rem).toLocaleString()} ₺\n` +
+                       `--------------------------\n` +
+                       `📞 للتواصل: ${d.phone}`;
+            
+            let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(whatsappUrl, '_blank');
+        }
 
         // --- أجور العمال ---
         function addWage(e) {
             e.preventDefault();
             let amount = parseFloat(document.getElementById('wageAmount').value);
             let method = document.getElementById('wageMethod').value;
+            let title = document.getElementById('wageTitle').value;
             let payRate = getCardLossRate(method);
             window.appData.wages = window.appData.wages || [];
-            window.appData.wages.push({ id: Date.now(), date: getDate(), title: document.getElementById('wageTitle').value, amount: amount, method: method, cardLoss: amount * payRate });
+            window.appData.wages.push({ id: Date.now(), date: getDate(), title: title, amount: amount, method: method, cardLoss: amount * payRate });
+            addLog("أجور عمال", `تم تسجيل أجر (${title}) بقيمة ${amount} ₺`);
             save(); e.target.reset();
         }
         window.renderWages = function() {
@@ -948,16 +1173,23 @@
             document.getElementById('wagesTable').innerHTML = html;
             document.getElementById('totalWagesSum').innerText = totalWages.toLocaleString() + ' ₺';
         }
-        window.delWage = function(id) { window.appData.wages = window.appData.wages.filter(w => w.id !== id); save(); }
+        window.delWage = function(id) { 
+            let w = window.appData.wages.find(x => x.id === id);
+            if(w) addLog("حذف أجر", `تم حذف أجر: ${w.title}`);
+            window.appData.wages = window.appData.wages.filter(w => w.id !== id); 
+            save(); 
+        }
 
         // --- المصاريف ---
         function addExpense(e) {
             e.preventDefault();
             let amount = parseFloat(document.getElementById('expAmount').value);
             let method = document.getElementById('expMethod').value;
+            let title = document.getElementById('expTitle').value;
             let payRate = getCardLossRate(method);
             window.appData.expenses = window.appData.expenses || [];
-            window.appData.expenses.push({ id: Date.now(), date: getDate(), title: document.getElementById('expTitle').value, amount: amount, method: method, cardLoss: amount * payRate });
+            window.appData.expenses.push({ id: Date.now(), date: getDate(), title: title, amount: amount, method: method, cardLoss: amount * payRate });
+            addLog("مصروف", `تم تسجيل مصروف (${title}) بقيمة ${amount} ₺`);
             save(); e.target.reset();
         }
         window.renderExpenses = function() {
@@ -971,7 +1203,12 @@
             document.getElementById('expensesTable').innerHTML = html;
             document.getElementById('totalExpensesSum').innerText = totalExp.toLocaleString() + ' ₺';
         }
-        window.delExp = function(id) { window.appData.expenses = window.appData.expenses.filter(e => e.id !== id); save(); }
+        window.delExp = function(id) { 
+            let ex = window.appData.expenses.find(x => x.id === id);
+            if(ex) addLog("حذف مصروف", `تم حذف مصروف: ${ex.title}`);
+            window.appData.expenses = window.appData.expenses.filter(e => e.id !== id); 
+            save(); 
+        }
 
         // --- الداشبورد والحسابات الجديدة ---
         window.updateDash = function() {
@@ -1003,17 +1240,11 @@
                 return sum + s.txs.reduce((a,b)=>a+(b.cardLoss||0),0);
             }, 0) + (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
 
-            // الحسابات المطلوبة بدقة:
-            // 1. الدخل الإجمالي = (إجمالي المبيعات - [المشتريات + خسارة الكروت]) فقط
+            // الحسابات المعتمدة:
             let grossIncome = tSales - (tPurchases + cLoss);
-
-            // 2. الربح الصافي = (إجمالي المبيعات - [المشتريات + خسارة الكروت + أجور العمال]) بدون المصاريف
             let netProfit = tSales - (tPurchases + cLoss + totalWages);
-
-            // 3. إجمالي ميزانية الورشة = (إجمالي المبيعات - [المشتريات + خسارة الكروت + أجور العمال + المصاريف])
             let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
 
-            // عرض النتائج في الكروت
             document.getElementById('dSales').innerText = tSales.toLocaleString() + ' ₺';
             document.getElementById('dPurchases').innerText = tPurchases.toLocaleString() + ' ₺';
             document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
@@ -1024,7 +1255,6 @@
             document.getElementById('dGrossIncome').innerText = grossIncome.toLocaleString() + ' ₺';
             document.getElementById('dTotalBudget').innerText = totalBudget.toLocaleString() + ' ₺';
 
-            // تلوين حسب الربح/الخسارة
             let setCardColor = (elId, cardId, val) => {
                 let el = document.getElementById(elId);
                 let card = document.getElementById(cardId);
@@ -1041,6 +1271,7 @@
             setCardColor('dTotalBudget', 'cardTotalBudget', totalBudget);
             
             checkDeliveryAlerts();
+            renderLogs();
         }
     </script>
 </body>
