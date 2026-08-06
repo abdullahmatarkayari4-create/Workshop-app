@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حسابات ورشة الأثاث السحابي (الهيكل المحسن الآمن)</title>
+    <title>نظام حسابات ورشة الأثاث السحابي (الهيكل المحسن)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- مكتبة QR Code -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -26,6 +26,8 @@
         .stat-card:hover { transform: translateY(-3px); }
         .stat-card h3 { font-size: 15px; color: #7f8c8d; margin-bottom: 10px; font-weight: bold; }
         .stat-card .val { font-size: 26px; font-weight: bold; color: var(--primary); }
+        
+        .alert-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
         
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
@@ -131,6 +133,7 @@
                     <button class="dropdown-item info" onclick="switchSection('t-invoice-settings')">📄 إعدادات الفاتورة</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
                     <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات والنسخ</div>
+                    <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
                     <button class="dropdown-item info" onclick="exportBackup()">📥 تصدير نسخة احتياطية</button>
                     <button class="dropdown-item info" onclick="document.getElementById('importFile').click()">📤 استعادة نسخة احتياطية</button>
                     <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBackup(event)">
@@ -139,17 +142,18 @@
                 </div>
             </div>
 
-            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي محسّن وآمن)</h1>
+            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي محسّن)</h1>
             <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ هيكل المجموعات الفرعية الفردية (Subcollections) مفعل ومحمّي لضمان جلب كل الفواتير القديمة.</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ نظام المجموعات الفرعية السحابي (Collections) مفعل ومزامنة فورية نشطة.</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
         <!-- الشاشة الرئيسية -->
         <div id="t-home" class="section active">
+            <div id="deliveryAlertContainer"></div>
             <h2>لوحة المؤشرات العامة (Dashboard)</h2>
             <div class="dashboard" style="margin-top: 15px;">
                 <div class="stat-card"><h3>إجمالي المبيعات</h3><div class="val" id="dSales">0 ₺</div></div>
@@ -430,7 +434,7 @@
         </div>
     </div>
 
-    <!-- سكربتات الاتصال السحابي الآمن مع الترحيل التلقائي الشامل للفواتير القديمة -->
+    <!-- سكربتات الاتصال السحابي Firebase والهيكل الجديد (Subcollections) مع الترحيل التلقائي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
@@ -464,74 +468,77 @@
             signOut(auth).then(() => location.reload());
         };
 
-        // دالة التحميل والترحيل الذكي الآمن لضمان عدم ضياع أي فاتورة قديمة
+        // دالة تحميل البيانات مع الترحيل التلقائي لضمان عدم ضياع أي بيانات قديمة
         async function loadCloudData() {
             if (!currentUser) return;
             try {
-                window.appData = { customers: [], suppliers: [], orders: [], expenses: [], wages: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
-
                 const userDocRef = doc(dbCloud, "workshops", currentUser.uid);
                 const userDocSnap = await getDoc(userDocRef);
+
+                // --- سكريبت الترحيل الذكي للبيانات القديمة ---
+                if (userDocSnap.exists()) {
+                    const data = userDocSnap.data();
+                    if (!data.migrated && (data.customers || data.suppliers || data.orders || data.expenses || data.wages || data.logs)) {
+                        console.log("جارٍ ترحيل البيانات القديمة إلى نظام المجموعات الفرعية (Subcollections)...");
+                        
+                        if (data.customers) {
+                            for (let c of data.customers) {
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
+                            }
+                        }
+                        if (data.suppliers) {
+                            for (let s of data.suppliers) {
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), s);
+                            }
+                        }
+                        if (data.orders) {
+                            for (let o of data.orders) {
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(o.id)), o);
+                            }
+                        }
+                        if (data.expenses) {
+                            for (let ex of data.expenses) {
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(ex.id)), ex);
+                            }
+                        }
+                        if (data.wages) {
+                            for (let w of data.wages) {
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(w.id)), w);
+                            }
+                        }
+                        if (data.logs) {
+                            for (let l of data.logs) {
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "logs", String(l.id)), l);
+                            }
+                        }
+
+                        // حفظ إعدادات الفاتورة وتثبيت علامة أن الترحيل تم بنجاح
+                        await setDoc(userDocRef, {
+                            invoiceSettings: data.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" },
+                            migrated: true
+                        });
+                        console.log("تم ترحيل البيانات بنجاح تام!");
+                    }
+                }
+
+                // قراءة البيانات من المجموعات الفرعية (Subcollections)
+                window.appData = { customers: [], suppliers: [], orders: [], expenses: [], wages: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
 
                 if (userDocSnap.exists() && userDocSnap.data().invoiceSettings) {
                     window.appData.invoiceSettings = userDocSnap.data().invoiceSettings;
                 }
 
-                // 1. جترحيل وتحميل الزبائن وفواتيرهم القديمة والجديدة
-                const custSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers"));
-                for (let custDoc of custSnap.docs) {
-                    let cData = custDoc.data();
-                    
-                    // إذا وجدنا فواتير قديمة مخزنة كمصفوفة داخل الزبون، نقوم بترحيلها فوراً للمجموعة الفرعية لضمان عدم ضياعها
-                    if (Array.isArray(cData.txs) && cData.txs.length > 0) {
-                        for (let t of cData.txs) {
-                            if (!t.id) t.id = Date.now() + Math.floor(Math.random() * 1000);
-                            await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cData.id), "transactions", String(t.id)), t);
-                        }
-                        // حذف المصفوفة القديمة من المستند الرئيسي بعد ترحيلها بنجاح لتنظيف المستند
-                        delete cData.txs;
-                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cData.id)), cData);
-                    }
-
-                    // قراءة الفواتير من المجموعة الفرعية الخاصة بالزبون
-                    const txsSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers", String(cData.id), "transactions"));
-                    cData.txs = [];
-                    txsSnap.forEach(tDoc => cData.txs.push(tDoc.data()));
-                    cData.txs.sort((a, b) => a.id - b.id);
-
-                    window.appData.customers.push(cData);
-                }
-
-                // 2. جرحيل وتحميل الموردين وفواتيرهم القديمة والجديدة
-                const suppSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers"));
-                for (let suppDoc of suppSnap.docs) {
-                    let sData = suppDoc.data();
-                    
-                    if (Array.isArray(sData.txs) && sData.txs.length > 0) {
-                        for (let t of sData.txs) {
-                            if (!t.id) t.id = Date.now() + Math.floor(Math.random() * 1000);
-                            await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sData.id), "transactions", String(t.id)), t);
-                        }
-                        delete sData.txs;
-                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sData.id)), sData);
-                    }
-
-                    const txsSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers", String(sData.id), "transactions"));
-                    sData.txs = [];
-                    txsSnap.forEach(tDoc => sData.txs.push(tDoc.data()));
-                    sData.txs.sort((a, b) => a.id - b.id);
-
-                    window.appData.suppliers.push(sData);
-                }
-
-                // 3. جلب باقي البيانات (الطلبات، المصاريف، الأجور، السجلات)
-                const [orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
+                const [custSnap, suppSnap, orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
+                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers")),
+                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "orders")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "expenses")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "wages")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "logs"))
                 ]);
 
+                custSnap.forEach(d => window.appData.customers.push(d.data()));
+                suppSnap.forEach(d => window.appData.suppliers.push(d.data()));
                 orderSnap.forEach(d => window.appData.orders.push(d.data()));
                 expSnap.forEach(d => window.appData.expenses.push(d.data()));
                 wageSnap.forEach(d => window.appData.wages.push(d.data()));
@@ -548,12 +555,11 @@
             }
         }
 
-        // دوال الحفظ الفردي المباشر لكل عنصر في مكانه
+        // دوال التخزين السحابي المحسنة (تحديث العنصر المستهدف فقط دون رفع كامل الملف)
         window.cloudSave = {
             customer: async (c) => {
                 if (!currentUser) return;
-                let custToSave = { id: c.id, name: c.name, phone: c.phone };
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), custToSave);
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
             },
             deleteCustomer: async (id) => {
                 if (!currentUser) return;
@@ -561,8 +567,7 @@
             },
             supplier: async (s) => {
                 if (!currentUser) return;
-                let suppToSave = { id: s.id, name: s.name, phone: s.phone };
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), suppToSave);
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), s);
             },
             deleteSupplier: async (id) => {
                 if (!currentUser) return;
@@ -598,7 +603,7 @@
             },
             settings: async () => {
                 if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings }, { merge: true });
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings, migrated: true }, { merge: true });
             }
         };
 
@@ -632,22 +637,9 @@
                     if (imported && imported.customers) {
                         if (confirm("⚠️ هل تريد استبدال البيانات الحالية؟")) {
                             window.appData = imported;
-                            for(let c of window.appData.customers) {
-                                await window.cloudSave.customer(c);
-                                if(c.txs) {
-                                    for(let t of c.txs) {
-                                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions", String(t.id)), t);
-                                    }
-                                }
-                            }
-                            for(let s of window.appData.suppliers) {
-                                await window.cloudSave.supplier(s);
-                                if(s.txs) {
-                                    for(let t of s.txs) {
-                                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id), "transactions", String(t.id)), t);
-                                    }
-                                }
-                            }
+                            // رفع النسخة المستعادة للـ Subcollections
+                            for(let c of window.appData.customers) await window.cloudSave.customer(c);
+                            for(let s of window.appData.suppliers) await window.cloudSave.supplier(s);
                             for(let o of window.appData.orders) await window.cloudSave.order(o);
                             for(let w of window.appData.wages) await window.cloudSave.wage(w);
                             for(let ex of window.appData.expenses) await window.cloudSave.expense(ex);
@@ -785,25 +777,13 @@
             if(window.cloudSave) window.cloudSave.deleteCustomer(id);
             save(); 
         }
-        window.openCust = async function(id) {
+        window.openCust = function(id) {
             let c = window.appData.customers.find(x => x.id === id);
             if(!c) return;
             document.getElementById('activeCustId').value = c.id;
             document.getElementById('detCustTitle').innerText = 'حساب الزبون: ' + c.name;
             document.getElementById('salesMainView').style.display = 'none';
             document.getElementById('salesDetailView').style.display = 'block';
-            
-            // جلب المعاملات المحدثة من المجموعة الفرعية للزبون لضمان عرض كل الفواتير بدقة
-            try {
-                const txSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions"));
-                c.txs = [];
-                txSnap.forEach(doc => c.txs.push(doc.data()));
-                c.txs.sort((a, b) => a.id - b.id);
-            } catch(err) {
-                console.error(err);
-                c.txs = c.txs || [];
-            }
-
             cancelCustEdit();
             renderCustTxs(c);
         }
@@ -814,7 +794,7 @@
             if(type === 'payment') { groupTot.style.display = 'none'; document.getElementById('billCustTotal').value = 0; }
             else { groupTot.style.display = 'flex'; }
         }
-        window.saveCustomerAction = async function(e) {
+        window.saveCustomerAction = function(e) {
             e.preventDefault();
             let c = window.appData.customers.find(x => x.id == document.getElementById('activeCustId').value);
             if(!c) return;
@@ -826,29 +806,16 @@
             let desc = document.getElementById('billCustDesc').value;
             let method = document.getElementById('billCustMethod').value;
             
-            let txId = editId ? editId : Date.now();
-            let tx = { 
-                id: Number(txId), 
-                date: editId ? (c.txs.find(t => t.id == editId)?.date || getDate()) : getDate(), 
-                desc: desc, 
-                total: total, 
-                paid: paid, 
-                method: method, 
-                cardLoss: 0 
-            };
-
-            // حفظ الفاتورة في المجموعة الفرعية المستقلة الخاصة بالزبون
-            if(currentUser) {
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions", String(tx.id)), tx);
-            }
-
             if(editId) {
+                let tx = c.txs.find(t => t.id == editId);
+                if(tx) { tx.desc = desc; tx.total = total; tx.paid = paid; tx.method = method; }
                 addLog("تعديل معاملة زبون", `تم تعديل معاملة للزبون ${c.name}`);
             } else {
+                c.txs.push({ id: Date.now(), date: getDate(), desc: desc, total: total, paid: paid, method: method, cardLoss: 0 });
                 addLog("إضافة معاملة زبون", `معاملة جديدة للزبون ${c.name}`);
             }
-            save(); 
-            openCust(c.id);
+            if(window.cloudSave) window.cloudSave.customer(c);
+            save(); openCust(c.id);
         }
         window.editCustTx = function(cid, tid) {
             let c = window.appData.customers.find(x => x.id === cid);
@@ -884,13 +851,11 @@
             });
             document.getElementById('customerTxTable').innerHTML = html;
         }
-        window.delCustTx = async function(cid, tid) { 
+        window.delCustTx = function(cid, tid) { 
             let c = window.appData.customers.find(x => x.id === cid); 
-            if(currentUser) {
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cid), "transactions", String(tid)));
-            }
             c.txs = c.txs.filter(t => t.id !== tid); 
             addLog("حذف معاملة زبون", `حذف معاملة من حساب ${c.name}`);
+            if(window.cloudSave) window.cloudSave.customer(c);
             save(); openCust(cid); 
         }
 
@@ -919,24 +884,13 @@
             if(window.cloudSave) window.cloudSave.deleteSupplier(id);
             save(); 
         }
-        window.openSupp = async function(id) {
+        window.openSupp = function(id) {
             let s = window.appData.suppliers.find(x => x.id === id);
             if(!s) return;
             document.getElementById('activeSuppId').value = s.id;
             document.getElementById('detSuppTitle').innerText = 'حساب المورد: ' + s.name;
             document.getElementById('suppMainView').style.display = 'none';
             document.getElementById('suppDetailView').style.display = 'block';
-            
-            try {
-                const txSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id), "transactions"));
-                s.txs = [];
-                txSnap.forEach(doc => s.txs.push(doc.data()));
-                s.txs.sort((a, b) => a.id - b.id);
-            } catch(err) {
-                console.error(err);
-                s.txs = s.txs || [];
-            }
-
             cancelSuppEdit();
             renderSuppTxs(s);
         }
@@ -948,7 +902,7 @@
             if(type === 'payment') { groupRaw.style.display = 'none'; groupType.style.display = 'none'; document.getElementById('billSuppTotal').value = 0; }
             else { groupRaw.style.display = 'flex'; groupType.style.display = 'flex'; }
         }
-        window.saveSupplierAction = async function(e) {
+        window.saveSupplierAction = function(e) {
             e.preventDefault();
             let s = window.appData.suppliers.find(x => x.id == document.getElementById('activeSuppId').value);
             if(!s) return;
@@ -968,28 +922,15 @@
                 if(billType === 'شاملة_كرت_10') supplierTotalNet = rawTotal * 0.90;
                 else if(billType === 'شاملة_كرت_5') supplierTotalNet = rawTotal * 0.95;
             }
-
-            let txId = editId ? editId : Date.now();
-            let tx = { 
-                id: Number(txId), 
-                date: editId ? (s.txs.find(t => t.id == editId)?.date || getDate()) : getDate(), 
-                desc: desc, 
-                supplierTotalNet: supplierTotalNet, 
-                grossPaid: grossPaid, 
-                supplierPaidNet: supplierPaidNet, 
-                method: method, 
-                cardLoss: paymentCardLoss 
-            };
-
-            if(currentUser) {
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id), "transactions", String(tx.id)), tx);
-            }
-
             if(editId) {
+                let tx = s.txs.find(t => t.id == editId);
+                if(tx) { tx.desc = desc; tx.supplierTotalNet = supplierTotalNet; tx.grossPaid = grossPaid; tx.supplierPaidNet = supplierPaidNet; tx.method = method; tx.cardLoss = paymentCardLoss; }
                 addLog("تعديل معاملة مورد", `تعديل معاملة للمورد ${s.name}`);
             } else {
+                s.txs.push({ id: Date.now(), date: getDate(), desc: desc, supplierTotalNet: supplierTotalNet, grossPaid: grossPaid, supplierPaidNet: supplierPaidNet, method: method, cardLoss: paymentCardLoss });
                 addLog("إضافة معاملة مورد", `معاملة جديدة للمورد ${s.name}`);
             }
+            if(window.cloudSave) window.cloudSave.supplier(s);
             save(); openSupp(s.id);
         }
         window.editSuppTx = function(sid, tid) {
@@ -1027,13 +968,11 @@
             });
             document.getElementById('supplierTxTable').innerHTML = html;
         }
-        window.delSuppTx = async function(sid, tid) { 
+        window.delSuppTx = function(sid, tid) { 
             let s = window.appData.suppliers.find(x => x.id === sid); 
-            if(currentUser) {
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sid), "transactions", String(tid)));
-            }
             s.txs = s.txs.filter(t => t.id !== tid); 
             addLog("حذف معاملة مورد", `حذف معاملة من ${s.name}`);
+            if(window.cloudSave) window.cloudSave.supplier(s);
             save(); openSupp(sid); 
         }
 
@@ -1138,7 +1077,7 @@
             document.getElementById('deliverModal').style.display = 'flex';
         }
         window.closeDeliverModal = function() { document.getElementById('deliverModal').style.display = 'none'; }
-        window.confirmDelivery = async function(e) {
+        window.confirmDelivery = function(e) {
             e.preventDefault();
             let orderId = parseInt(document.getElementById('deliverOrderId').value);
             let paidAmount = parseFloat(document.getElementById('deliverPaidAmount').value) || 0;
@@ -1148,15 +1087,8 @@
             let customer = window.appData.customers.find(c => c.id === order.customerId);
             if(!customer) return;
             order.status = 'مكتمل';
-            
-            let tx = { id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 };
             if(!customer.txs) customer.txs = [];
-            customer.txs.push(tx);
-
-            if(currentUser) {
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(customer.id), "transactions", String(tx.id)), tx);
-            }
-
+            customer.txs.push({ id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 });
             addLog("تسليم طلب", `تسليم طلب للزبون ${customer.name}`);
             if(window.cloudSave) {
                 window.cloudSave.order(order);
@@ -1259,6 +1191,7 @@
         }
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
+        // دالة مشاركة الفاتورة كـ PDF عبر واتساب بنفس هيئة الطباعة تماماً
         window.shareInvoiceWhatsAppPdf = async function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة!"); return; }
