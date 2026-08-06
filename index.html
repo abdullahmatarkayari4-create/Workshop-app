@@ -78,16 +78,6 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-
-        @media print {
-            body * { visibility: hidden !important; }
-            #printableInvoiceArea, #printableInvoiceArea * { visibility: visible !important; }
-            #printableInvoiceArea {
-                position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; margin: 0;
-                direction: rtl !important; text-align: right !important; letter-spacing: normal !important;
-            }
-            .no-print { display: none !important; }
-        }
     </style>
 </head>
 <body>
@@ -392,9 +382,9 @@
                     <div id="qrcode" style="padding: 5px; background: white; border: 1px solid #ddd;"></div>
                 </div>
             </div>
-            <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
                 <button class="btn-whatsapp" onclick="shareInvoiceWhatsApp()">مشاركة عبر واتساب 💬</button>
-                <button class="btn" onclick="window.print()">طباعة الآن</button>
+                <button class="btn" onclick="executePrint()">طباعة الفاتورة كاملة (PDF / طباعة)</button>
                 <button class="btn btn-back" onclick="closePrintModal()" style="margin:0;">إغلاق</button>
             </div>
         </div>
@@ -1086,7 +1076,7 @@
             container.innerHTML = resultsHtml;
         }
 
-        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب (بدون تقطيع حروف) ---
+        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب (محدث بنظام نافذة الطباعة الكاملة) ---
         let lastPrintedInvoiceData = {};
 
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
@@ -1103,7 +1093,7 @@
             document.getElementById('pMethod').innerText = method;
             document.getElementById('pRem').innerText = Number(rem).toLocaleString() + ' ₺';
 
-            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title };
+            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title, address: invSet.address };
 
             let qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
@@ -1122,14 +1112,62 @@
 
             let printModal = document.getElementById('printModal');
             printModal.style.display = 'flex';
-            
-            let printableArea = document.getElementById('printableInvoiceArea');
-            printableArea.style.direction = 'rtl';
-            printableArea.style.textAlign = 'right';
-            printableArea.style.letterSpacing = 'normal';
         }
 
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
+
+        // دالة طباعة الفاتورة كاملة عبر نافذة منبثقة مستقلة تضمن عدم ضياع أي تفاصيل
+        window.executePrint = function() {
+            let printableArea = document.getElementById('printableInvoiceArea');
+            if(!printableArea) {
+                alert("لا توجد بيانات للطباعة!");
+                return;
+            }
+
+            let printWindow = window.open('', '_blank', 'height=750,width=750');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>طباعة الفاتورة - ورشة الأثاث</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, sans-serif;
+                            color: #222;
+                            background-color: #fff;
+                            margin: 0;
+                            padding: 20px;
+                            direction: rtl;
+                            text-align: right;
+                        }
+                        .invoice-container {
+                            width: 100%;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                            border: 1px solid #ccc;
+                            border-radius: 8px;
+                            box-sizing: border-box;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="invoice-container">
+                        ${printableArea.innerHTML}
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.focus();
+                            window.print();
+                            window.close();
+                        };
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
 
         window.shareInvoiceWhatsApp = function() {
             let d = lastPrintedInvoiceData;
