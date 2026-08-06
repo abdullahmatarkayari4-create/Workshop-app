@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام حسابات ورشة الأثاث السحابي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax5/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- تضمين مكتبة QR Code الرسمية -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="shortcut icon" href="icon.png">
@@ -15,7 +13,7 @@
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #c0392b; --warning: #d35400; --bg: #f4f6f7; --card: #ffffff; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg); color: #333; padding: 15px; }
+        body { background-color: var(--bg); color: #333; padding: 15px; direction: rtl; text-align: right; }
         .container { max-width: 1050px; margin: 0 auto; }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .sync-bar { background: #e8f4f8; border: 1px solid #bce8f1; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -31,7 +29,7 @@
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
         .dropdown-item.danger { color: var(--danger); }
         .dropdown-item.warning { color: var(--warning); }
@@ -43,13 +41,13 @@
         form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #fafafa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e0e0e0; }
         .group { display: flex; flex-direction: column; }
         label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; direction: rtl; text-align: right; }
         .btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
-        .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 11px; }
-        .btn-print { background: var(--secondary); padding: 4px 8px; font-size: 11px; }
+        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 11px; color: white; border-radius: 4px; border: none; cursor: pointer; }
+        .btn-print { background: var(--secondary); padding: 4px 8px; font-size: 11px; color: white; border-radius: 4px; border: none; cursor: pointer; }
         .btn-edit { background: var(--warning); padding: 4px 8px; font-size: 11px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-back { background: #7f8c8d; margin-bottom: 10px; }
+        .btn-back { background: #7f8c8d; margin-bottom: 10px; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { padding: 8px; text-align: right; border-bottom: 1px solid #eee; }
         th { background: #f8f9fa; }
@@ -86,6 +84,7 @@
             #printableInvoiceArea, #printableInvoiceArea * { visibility: visible !important; }
             #printableInvoiceArea {
                 position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; margin: 0;
+                direction: rtl !important; text-align: right !important; letter-spacing: normal !important;
             }
             .no-print { display: none !important; }
         }
@@ -336,7 +335,7 @@
             <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="expensesTable"></tbody></table>
         </div>
 
-        <!-- 2: البحث عن الزبون - المورد - السيباريش -->
+        <!-- البحث الشامل -->
         <div id="t-search" class="section">
             <h2>البحث الشامل (الزبائن - الموردين - الطلبات)</h2>
             <form onsubmit="return false;">
@@ -345,7 +344,7 @@
             <div id="searchResultsContainer"></div>
         </div>
 
-        <!-- 1 & 4: الفلترة وسجل التعديلات + إعدادات الفاتورة -->
+        <!-- الفلترة وسجل التعديلات + إعدادات الفاتورة -->
         <div id="t-filter" class="section">
             <h2>سجل التعديلات والعمليات (الفلترة)</h2>
             <p style="font-size:12px; color:#666; margin-bottom:10px;">يسجل هذا القسم أي عملية تعديل، إضافة أو حذف تتم داخل النظام مع التاريخ والوقت بدقة.</p>
@@ -367,7 +366,7 @@
         </div>
     </div>
 
-    <!-- نافذة الطباعة المنبثقة (مع دعم QR Code ورقم الهاتف والعنوان) -->
+    <!-- نافذة الطباعة المنبثقة -->
     <div id="printModal">
         <div class="invoice-print-box">
             <div id="printableInvoiceArea">
@@ -615,7 +614,7 @@
         function addLog(actionType, details) {
             if(!window.appData.logs) window.appData.logs = [];
             window.appData.logs.unshift({ id: Date.now(), time: getDateTimeNow(), type: actionType, details: details });
-            if(window.appData.logs.length > 100) window.appData.logs.pop(); // الحفاظ على أحدث 100 سجل
+            if(window.appData.logs.length > 100) window.appData.logs.pop();
         }
 
         function renderLogs() {
@@ -1045,7 +1044,7 @@
             alert("تم تسليم الطلب وتحويله بنجاح إلى فاتورة في حساب الزبون!");
         }
 
-        // --- 2: البحث الشامل عن الزبون - المورد - السيبيراش ---
+        // --- البحث الشامل ---
         window.performGlobalSearch = function() {
             let query = document.getElementById('globalSearchInput').value.trim().toLowerCase();
             let container = document.getElementById('searchResultsContainer');
@@ -1053,7 +1052,6 @@
 
             let resultsHtml = '';
 
-            // بحث الزبائن
             let matchedCusts = (window.appData.customers || []).filter(c => c.name.toLowerCase().includes(query) || (c.phone && c.phone.toLowerCase().includes(query)));
             if(matchedCusts.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:10px;">الزبائن المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1063,7 +1061,6 @@
                 resultsHtml += `</tbody></table>`;
             }
 
-            // بحث الموردين
             let matchedSupps = (window.appData.suppliers || []).filter(s => s.name.toLowerCase().includes(query) || (s.phone && s.phone.toLowerCase().includes(query)));
             if(matchedSupps.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الموردين المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1073,7 +1070,6 @@
                 resultsHtml += `</tbody></table>`;
             }
 
-            // بحث الطلبات (Siparişler)
             let matchedOrders = (window.appData.orders || []).filter(o => o.customerName.toLowerCase().includes(query) || o.type.toLowerCase().includes(query) || o.fabric.toLowerCase().includes(query) || (o.extra && o.extra.toLowerCase().includes(query)));
             if(matchedOrders.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الطلبات المطابقة (Siparişler):</h3><table><thead><tr><th>التاريخ</th><th>الزبون</th><th>الطقم</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1090,7 +1086,7 @@
             container.innerHTML = resultsHtml;
         }
 
-        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب ---
+        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب (بدون تقطيع حروف) ---
         let lastPrintedInvoiceData = {};
 
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
@@ -1109,7 +1105,6 @@
 
             lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title };
 
-            // توليد QR Code لرقم الهاتف
             let qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
             try {
@@ -1125,26 +1120,32 @@
                 qrContainer.innerText = invSet.phone;
             }
 
-            document.getElementById('printModal').style.display = 'flex';
+            let printModal = document.getElementById('printModal');
+            printModal.style.display = 'flex';
+            
+            let printableArea = document.getElementById('printableInvoiceArea');
+            printableArea.style.direction = 'rtl';
+            printableArea.style.textAlign = 'right';
+            printableArea.style.letterSpacing = 'normal';
         }
 
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
-        // --- 3: مشاركة الفاتورة عبر واتساب ---
         window.shareInvoiceWhatsApp = function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة للمشاركة!"); return; }
+            
             let text = `📄 *${d.title || 'فاتورة ورشة الأثاث'}*\n` +
-                       `--------------------------\n` +
-                       `👤 *الحساب:* ${d.name}\n` +
+                       `━━━━━━━━━━━━━━━\n` +
+                       `👤 *اسم الحساب:* ${d.name}\n` +
                        `📅 *التاريخ:* ${d.date}\n` +
                        `📝 *البيان:* ${d.desc}\n` +
                        `💰 *المبلغ الإجمالي:* ${Number(d.total).toLocaleString()} ₺\n` +
                        `💵 *المبلغ المدفوع:* ${Number(d.paid).toLocaleString()} ₺\n` +
                        `💳 *طريقة الدفع:* ${d.method}\n` +
                        `🔴 *المبلغ المتبقي:* ${Number(d.rem).toLocaleString()} ₺\n` +
-                       `--------------------------\n` +
-                       `📞 للتواصل: ${d.phone}`;
+                       `━━━━━━━━━━━━━━━\n` +
+                       `📞 *للتواصل مع الورشة:* ${d.phone}`;
             
             let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
             window.open(whatsappUrl, '_blank');
@@ -1210,7 +1211,7 @@
             save(); 
         }
 
-        // --- الداشبورد والحسابات الجديدة ---
+        // --- الداشبورد والحسابات ---
         window.updateDash = function() {
             let tSales = 0, tCustDebt = 0;
             window.appData.customers.forEach(c => {
@@ -1240,7 +1241,6 @@
                 return sum + s.txs.reduce((a,b)=>a+(b.cardLoss||0),0);
             }, 0) + (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
 
-            // الحسابات المعتمدة:
             let grossIncome = tSales - (tPurchases + cLoss);
             let netProfit = tSales - (tPurchases + cLoss + totalWages);
             let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
