@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام حسابات ورشة الأثاث السحابي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- تضمين مكتبة QR Code الرسمية بشكل صحيح -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="shortcut icon" href="icon.png">
@@ -13,7 +14,7 @@
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #c0392b; --warning: #d35400; --bg: #f4f6f7; --card: #ffffff; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg); color: #333; padding: 15px; direction: rtl; text-align: right; }
+        body { background-color: var(--bg); color: #333; padding: 15px; }
         .container { max-width: 1050px; margin: 0 auto; }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; position: relative; }
         .sync-bar { background: #e8f4f8; border: 1px solid #bce8f1; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -29,7 +30,7 @@
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border: none; width: 100%; text-align: right; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
         .dropdown-item.danger { color: var(--danger); }
         .dropdown-item.warning { color: var(--warning); }
@@ -41,9 +42,9 @@
         form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #fafafa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e0e0e0; }
         .group { display: flex; flex-direction: column; }
         label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; direction: rtl; text-align: right; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
         .btn { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 11px; color: white; border-radius: 4px; border: none; cursor: pointer; }
         .btn-print { background: var(--secondary); padding: 4px 8px; font-size: 11px; color: white; border-radius: 4px; border: none; cursor: pointer; }
         .btn-edit { background: var(--warning); padding: 4px 8px; font-size: 11px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -70,13 +71,43 @@
         }
         .invoice-print-box {
             background: white;
-            width: 480px;
+            width: 520px;
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             position: relative;
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        /* تحسينات نظام الطباعة الاحترافي */
+        @media print {
+            body * { visibility: hidden !important; }
+            #printModal, #printModal * { visibility: visible !important; }
+            #printModal {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: white !important;
+                z-index: 999999 !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: flex-start !important;
+                padding-top: 10px !important;
+            }
+            .invoice-print-box {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 10px !important;
+                margin: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -356,35 +387,43 @@
         </div>
     </div>
 
-    <!-- نافذة الطباعة المنبثقة -->
+    <!-- نافذة الطباعة المنبثقة المحسنة -->
     <div id="printModal">
         <div class="invoice-print-box">
             <div id="printableInvoiceArea">
-                <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 id="invHeaderTitle" style="font-size: 18px; color: #000; margin-bottom: 3px;">ورشة الأثاث والتنجيد</h2>
-                    <p id="invHeaderAddress" style="font-size: 12px; color: #555;"></p>
-                    <p id="invHeaderPhone" style="font-size: 12px; color: #555; font-weight: bold;"></p>
+                <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 15px;">
+                    <h2 id="invHeaderTitle" style="font-size: 20px; color: #000; margin-bottom: 4px; font-weight: bold;">ورشة الأثاث والتنجيد</h2>
+                    <p id="invHeaderAddress" style="font-size: 12px; color: #555; margin-bottom: 2px;"></p>
+                    <p id="invHeaderPhone" style="font-size: 12px; color: #333; font-weight: bold;"></p>
                 </div>
-                <div style="font-size: 13px; line-height: 1.8;">
-                    <p><b>التاريخ:</b> <span id="pDate"></span></p>
-                    <p><b>اسم الحساب:</b> <span id="pEntityName"></span></p>
-                    <p><b>البيان:</b> <span id="pDesc"></span></p>
-                    <p><b>المبلغ الإجمالي / البضاعة:</b> <span id="pTotal"></span></p>
-                    <p><b>المبلغ المدفوع:</b> <span id="pPaid"></span></p>
-                    <p><b>طريقة الدفع:</b> <span id="pMethod"></span></p>
-                    <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #ccc;">
-                    <p style="font-size: 14px; font-weight: bold;"><b>المبلغ المتبقي:</b> <span id="pRem" style="color: #c0392b;"></span></p>
-                </div>
-                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 12px;">
-                        <span>توقيع الورشة: ....................</span>
+                <div style="font-size: 13px; line-height: 2;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><b>التاريخ:</b> <span id="pDate"></span></span>
+                        <span><b>طريقة الدفع:</b> <span id="pMethod"></span></span>
                     </div>
-                    <div id="qrcode" style="padding: 5px; background: white; border: 1px solid #ddd;"></div>
+                    <p><b>اسم الحساب:</b> <span id="pEntityName" style="font-size: 14px; font-weight: bold; color: #000;"></span></p>
+                    <p><b>البيان / التفاصيل:</b> <span id="pDesc"></span></p>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px dashed #ccc;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><b>قيمة البضاعة / الإجمالي:</b> <span id="pTotal"></span></span>
+                        <span><b>المبلغ المدفوع:</b> <span id="pPaid"></span></span>
+                    </div>
+                    <div style="margin-top: 8px; background: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: bold;">المبلغ المتبقي:</span>
+                        <span id="pRem" style="font-size: 16px; font-weight: bold; color: #c0392b;"></span>
+                    </div>
+                </div>
+                <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 10px;">
+                    <div style="font-size: 12px; color: #555;">
+                        <span>توقيع الورشة / الختم:</span><br><br>
+                        <span>...................................</span>
+                    </div>
+                    <div id="qrcode" style="padding: 4px; background: white; border: 1px solid #ddd; text-align: center;"></div>
                 </div>
             </div>
-            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
-                <button class="btn-whatsapp" onclick="shareInvoiceWhatsApp()">مشاركة عبر واتساب 💬</button>
-                <button class="btn" onclick="executePrint()">طباعة الفاتورة كاملة (PDF / طباعة)</button>
+            <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                <button class="btn-whatsapp" onclick="shareInvoiceWhatsApp()">مشاركة واتساب 💬</button>
+                <button class="btn" onclick="window.print()">طباعة الفاتورة 🖨️</button>
                 <button class="btn btn-back" onclick="closePrintModal()" style="margin:0;">إغلاق</button>
             </div>
         </div>
@@ -604,7 +643,7 @@
         function addLog(actionType, details) {
             if(!window.appData.logs) window.appData.logs = [];
             window.appData.logs.unshift({ id: Date.now(), time: getDateTimeNow(), type: actionType, details: details });
-            if(window.appData.logs.length > 100) window.appData.logs.pop();
+            if(window.appData.logs.length > 100) window.appData.logs.pop(); 
         }
 
         function renderLogs() {
@@ -1076,7 +1115,7 @@
             container.innerHTML = resultsHtml;
         }
 
-        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب (محدث بنظام نافذة الطباعة الكاملة) ---
+        // --- طباعة الفاتورة والـ QR Code ومشاركة الواتساب ---
         let lastPrintedInvoiceData = {};
 
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
@@ -1093,15 +1132,16 @@
             document.getElementById('pMethod').innerText = method;
             document.getElementById('pRem').innerText = Number(rem).toLocaleString() + ' ₺';
 
-            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title, address: invSet.address };
+            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title };
 
+            // توليد QR Code لرقم الهاتف بشكل آمن
             let qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
             try {
                 new QRCode(qrContainer, {
                     text: "tel:" + invSet.phone,
-                    width: 75,
-                    height: 75,
+                    width: 70,
+                    height: 70,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
@@ -1110,80 +1150,25 @@
                 qrContainer.innerText = invSet.phone;
             }
 
-            let printModal = document.getElementById('printModal');
-            printModal.style.display = 'flex';
+            document.getElementById('printModal').style.display = 'flex';
         }
 
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
-        // دالة طباعة الفاتورة كاملة عبر نافذة منبثقة مستقلة تضمن عدم ضياع أي تفاصيل
-        window.executePrint = function() {
-            let printableArea = document.getElementById('printableInvoiceArea');
-            if(!printableArea) {
-                alert("لا توجد بيانات للطباعة!");
-                return;
-            }
-
-            let printWindow = window.open('', '_blank', 'height=750,width=750');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html lang="ar" dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>طباعة الفاتورة - ورشة الأثاث</title>
-                    <style>
-                        body {
-                            font-family: 'Segoe UI', Tahoma, sans-serif;
-                            color: #222;
-                            background-color: #fff;
-                            margin: 0;
-                            padding: 20px;
-                            direction: rtl;
-                            text-align: right;
-                        }
-                        .invoice-container {
-                            width: 100%;
-                            max-width: 600px;
-                            margin: 0 auto;
-                            padding: 20px;
-                            border: 1px solid #ccc;
-                            border-radius: 8px;
-                            box-sizing: border-box;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="invoice-container">
-                        ${printableArea.innerHTML}
-                    </div>
-                    <script>
-                        window.onload = function() {
-                            window.focus();
-                            window.print();
-                            window.close();
-                        };
-                    </script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-        }
-
         window.shareInvoiceWhatsApp = function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة للمشاركة!"); return; }
-            
             let text = `📄 *${d.title || 'فاتورة ورشة الأثاث'}*\n` +
-                       `━━━━━━━━━━━━━━━\n` +
-                       `👤 *اسم الحساب:* ${d.name}\n` +
+                       `--------------------------\n` +
+                       `👤 *الحساب:* ${d.name}\n` +
                        `📅 *التاريخ:* ${d.date}\n` +
                        `📝 *البيان:* ${d.desc}\n` +
                        `💰 *المبلغ الإجمالي:* ${Number(d.total).toLocaleString()} ₺\n` +
                        `💵 *المبلغ المدفوع:* ${Number(d.paid).toLocaleString()} ₺\n` +
                        `💳 *طريقة الدفع:* ${d.method}\n` +
                        `🔴 *المبلغ المتبقي:* ${Number(d.rem).toLocaleString()} ₺\n` +
-                       `━━━━━━━━━━━━━━━\n` +
-                       `📞 *للتواصل مع الورشة:* ${d.phone}`;
+                       `--------------------------\n` +
+                       `📞 للتواصل: ${d.phone}`;
             
             let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
             window.open(whatsappUrl, '_blank');
@@ -1249,7 +1234,7 @@
             save(); 
         }
 
-        // --- الداشبورد والحسابات ---
+        // --- الداشبورد والحسابات الجديدة ---
         window.updateDash = function() {
             let tSales = 0, tCustDebt = 0;
             window.appData.customers.forEach(c => {
