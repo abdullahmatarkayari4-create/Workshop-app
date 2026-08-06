@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حسابات ورشة الأثاث السحابي (الهيكل المحسن)</title>
+    <title>نظام حسابات ورشة الأثاث السحابي (الهيكل المستقل المحدث)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- مكتبة QR Code -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -139,12 +139,12 @@
                 </div>
             </div>
 
-            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي محسّن بمعرفات مستقلة)</h1>
+            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي بهيكل الفواتير المستقلة)</h1>
             <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ نظام الفواتير المستقلة (Customer Orders & Transactions Collections) مفعل لمنع تضخم المستندات.</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ النظام يقوم بالبحث واسترجاع الفواتير القديمة وترحيلها بنجاح إلى هيكل المستندات المستقلة.</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
@@ -430,11 +430,11 @@
         </div>
     </div>
 
-    <!-- سكربتات الاتصال السحابي Firebase مع هيكل الفواتير المستقلة والترحيل الذكي -->
+    <!-- سكربت الاتصال السحابي مع ميزة الترحيل التلقائي للفواتير القديمة إلى مستندات مستقلة -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCft8hjpfugU_L4ZuSjXBd5vktRi3BFmb8",
@@ -464,74 +464,12 @@
             signOut(auth).then(() => location.reload());
         };
 
-        // دالة تحميل البيانات مع الترحيل الذكي والآمن (تشتغل لمرة واحدة وتحول الفواتير لمستندات مستقلة)
+        // دالة جلب البيانات مع الترحيل الذكي للفواتير القديمة إلى مستندات مستقلة
         async function loadCloudData() {
             if (!currentUser) return;
             try {
                 const userDocRef = doc(dbCloud, "workshops", currentUser.uid);
                 const userDocSnap = await getDoc(userDocRef);
-
-                // --- سكريبت الترحيل الذكي للبيانات القديمة ومنع الضياع ---
-                if (userDocSnap.exists()) {
-                    const data = userDocSnap.data();
-                    if (!data.migratedNewStructure && (data.customers || data.suppliers || data.orders || data.expenses || data.wages || data.logs)) {
-                        console.log("جارٍ ترحيل البيانات القديمة وفصل فواتير الزبائن إلى مستندات مستقلة (Orders/Transactions)...");
-                        
-                        if (data.customers) {
-                            for (let c of data.customers) {
-                                let oldTxs = c.txs || [];
-                                // حفظ الزبون بدون مصفوفة الفواتير الضخمة داخله
-                                delete c.txs;
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
-                                
-                                // حفظ كل فاتورة أو معاملة قديمة كـ مستند مستقل في مجموعة customer_txs
-                                for (let tx of oldTxs) {
-                                    tx.customerId = String(c.id);
-                                    await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customer_txs", String(tx.id)), tx);
-                                }
-                            }
-                        }
-                        if (data.suppliers) {
-                            for (let s of data.suppliers) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), s);
-                            }
-                        }
-                        if (data.orders) {
-                            for (let o of data.orders) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(o.id)), o);
-                            }
-                        }
-                        if (data.expenses) {
-                            for (let ex of data.expenses) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(ex.id)), ex);
-                            }
-                        }
-                        if (data.wages) {
-                            for (let w of data.wages) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(w.id)), w);
-                            }
-                        }
-                        if (data.logs) {
-                            for (let l of data.logs) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "logs", String(l.id)), l);
-                            }
-                        }
-
-                        // حفظ الإعدادات وتثبيت علامة نجاح الترحيل
-                        await setDoc(userDocRef, {
-                            invoiceSettings: data.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" },
-                            migratedNewStructure: true
-                        }, { merge: true });
-                        console.log("تم ترحيل وبناء هيكل المستندات المستقلة بنجاح تام!");
-                    }
-                }
-
-                // قراءة البيانات من المجموعات السحابية المستقلة
-                window.appData = { customers: [], suppliers: [], orders: [], expenses: [], wages: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
-
-                if (userDocSnap.exists() && userDocSnap.data().invoiceSettings) {
-                    window.appData.invoiceSettings = userDocSnap.data().invoiceSettings;
-                }
 
                 const [custSnap, txSnap, suppSnap, orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers")),
@@ -543,38 +481,82 @@
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "logs"))
                 ]);
 
-                // تجميع فواتير الزبائن وربطها بكل زبون بحسب الـ customerId الخاص بها
                 let allCustomerTxs = [];
                 txSnap.forEach(d => allCustomerTxs.push(d.data()));
 
-                custSnap.forEach(d => {
-                    let custData = d.data();
-                    custData.txs = allCustomerTxs.filter(t => String(t.customerId) === String(custData.id));
-                    window.appData.customers.push(custData);
-                });
+                window.appData.customers = [];
+                let migrationNeeded = false;
 
+                for (let d of custSnap.docs) {
+                    let custData = d.data();
+                    
+                    // الترحيل الذكي: إذا وجدت فواتير قديمة داخل مستند الزبون نفسه، انقلها لمستندات مستقلة
+                    if (custData.txs && Array.isArray(custData.txs) && custData.txs.length > 0) {
+                        migrationNeeded = true;
+                        for (let oldTx of custData.txs) {
+                            if (!oldTx.customerId) oldTx.customerId = String(custData.id);
+                            // تأكد ألا تكرر نفس الفاتورة
+                            if (!allCustomerTxs.some(t => String(t.id) === String(oldTx.id))) {
+                                allCustomerTxs.push(oldTx);
+                                // حفظها كمستند مستقل في مجموعة customer_txs على فايربيز
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customer_txs", String(oldTx.id)), oldTx);
+                            }
+                        }
+                    }
+
+                    // الحفاظ فقط على البيانات الأساسية للزبون في مستند الزبون
+                    let cleanCustomer = {
+                        id: custData.id,
+                        name: custData.name,
+                        phone: custData.phone || '-'
+                    };
+                    
+                    // ربط الفواتير الخاصة بهذا الزبون عبر الـ customerId
+                    cleanCustomer.txs = allCustomerTxs.filter(t => String(t.customerId) === String(cleanCustomer.id));
+                    window.appData.customers.push(cleanCustomer);
+                }
+
+                // إذا قمنا بالترحيل، نقوم بتحديث مستند الزبون في فايربيز لإزالة مصفوفة الـ txs الكبيرة منه نهائياً
+                if (migrationNeeded) {
+                    for (let c of window.appData.customers) {
+                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), { id: c.id, name: c.name, phone: c.phone });
+                    }
+                    console.log("تم بنجاح ترحيل جميع الفواتير القديمة إلى مستندات مستقلة مرتبطة بـ customerId!");
+                }
+
+                window.appData.suppliers = [];
                 suppSnap.forEach(d => window.appData.suppliers.push(d.data()));
+
+                window.appData.orders = [];
                 orderSnap.forEach(d => window.appData.orders.push(d.data()));
+
+                window.appData.expenses = [];
                 expSnap.forEach(d => window.appData.expenses.push(d.data()));
+
+                window.appData.wages = [];
                 wageSnap.forEach(d => window.appData.wages.push(d.data()));
+
+                window.appData.logs = [];
                 logSnap.forEach(d => window.appData.logs.push(d.data()));
+
+                if (userDocSnap.exists() && userDocSnap.data().invoiceSettings) {
+                    window.appData.invoiceSettings = userDocSnap.data().invoiceSettings;
+                }
 
                 checkMissingStructures();
                 refreshUI();
 
             } catch (e) {
-                console.error("خطأ في الاتصال، جاري استخدام الذاكرة المحلية:", e);
+                console.error("خطأ في جلب بيانات فايربيز:", e);
                 window.appData = JSON.parse(localStorage.getItem('workshop_db_v21')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
                 checkMissingStructures();
                 refreshUI();
             }
         }
 
-        // دوال التخزين السحابي المحسنة بمعرفات مستقلة تمنع تضخم مستندات الزبون
         window.cloudSave = {
             customer: async (c) => {
                 if (!currentUser) return;
-                // نحفظ بيانات الزبون الأساسية فقط بدون مصفوفة الفواتير داخله
                 let custToSave = { id: c.id, name: c.name, phone: c.phone };
                 await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), custToSave);
             },
@@ -584,6 +566,7 @@
             },
             customerTx: async (tx) => {
                 if (!currentUser) return;
+                // حفظ الفاتورة كمستند مستقل تماماً في مجموعة customer_txs مع ربطها بالـ customerId
                 await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customer_txs", String(tx.id)), tx);
             },
             deleteCustomerTx: async (txId) => {
@@ -628,7 +611,7 @@
             },
             settings: async () => {
                 if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings, migratedNewStructure: true }, { merge: true });
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings }, { merge: true });
             }
         };
 
@@ -801,7 +784,6 @@
             let c = window.appData.customers.find(x => x.id === id);
             if(c) {
                 addLog("حذف زبون", `تم حذف الزبون: ${c.name}`);
-                // حذف فواتيره المرتبطة محلياً وسحابياً
                 (c.txs || []).forEach(t => {
                     if(window.cloudSave && window.cloudSave.deleteCustomerTx) window.cloudSave.deleteCustomerTx(t.id);
                 });
@@ -852,7 +834,6 @@
                 c.txs.push(txObj);
                 addLog("إضافة معاملة زبون", `معاملة جديدة للزبون ${c.name}`);
             }
-            // حفظ الفاتورة في مستند مستقل سحابياً
             if(window.cloudSave && window.cloudSave.customerTx) window.cloudSave.customerTx(txObj);
             save(); openCust(c.id);
         }
