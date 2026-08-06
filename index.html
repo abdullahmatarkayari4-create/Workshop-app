@@ -27,12 +27,10 @@
         .stat-card h3 { font-size: 15px; color: #7f8c8d; margin-bottom: 10px; font-weight: bold; }
         .stat-card .val { font-size: 26px; font-weight: bold; color: var(--primary); }
         
-        .alert-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
         .dropdown-item.danger { color: var(--danger); }
         .dropdown-item.warning { color: var(--warning); }
@@ -133,7 +131,6 @@
                     <button class="dropdown-item info" onclick="switchSection('t-invoice-settings')">📄 إعدادات الفاتورة</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
                     <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات والنسخ</div>
-                    <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
                     <button class="dropdown-item info" onclick="exportBackup()">📥 تصدير نسخة احتياطية</button>
                     <button class="dropdown-item info" onclick="document.getElementById('importFile').click()">📤 استعادة نسخة احتياطية</button>
                     <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBackup(event)">
@@ -142,18 +139,17 @@
                 </div>
             </div>
 
-            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي محسّن)</h1>
+            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي محسّن بمعرفات مستقلة)</h1>
             <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ نظام المجموعات الفرعية السحابي (Collections) مفعل ومزامنة فورية نشطة.</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ نظام الفواتير المستقلة (Customer Orders & Transactions Collections) مفعل لمنع تضخم المستندات.</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
         <!-- الشاشة الرئيسية -->
         <div id="t-home" class="section active">
-            <div id="deliveryAlertContainer"></div>
             <h2>لوحة المؤشرات العامة (Dashboard)</h2>
             <div class="dashboard" style="margin-top: 15px;">
                 <div class="stat-card"><h3>إجمالي المبيعات</h3><div class="val" id="dSales">0 ₺</div></div>
@@ -183,7 +179,7 @@
                 <button class="btn btn-back" onclick="backToCustomers()">← رجوع للقائمة</button>
                 <h2 id="detCustTitle">حساب الزبون: </h2>
                 <div class="sub-box">
-                    <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">1. تسجيل فاتورة بضاعة جديدة للزبون</h3>
+                    <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">1. تسجيل فاتورة بضاعة أو دفعة مالية جديدة للزبون</h3>
                     <form id="custActionForm" onsubmit="saveCustomerAction(event)">
                         <input type="hidden" id="editCustTxId">
                         <div class="group"><label>نوع الحركة</label>
@@ -434,11 +430,11 @@
         </div>
     </div>
 
-    <!-- سكربتات الاتصال السحابي Firebase والهيكل الجديد (Subcollections) مع الترحيل التلقائي -->
+    <!-- سكربتات الاتصال السحابي Firebase مع هيكل الفواتير المستقلة والترحيل الذكي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCft8hjpfugU_L4ZuSjXBd5vktRi3BFmb8",
@@ -468,22 +464,31 @@
             signOut(auth).then(() => location.reload());
         };
 
-        // دالة تحميل البيانات مع الترحيل التلقائي لضمان عدم ضياع أي بيانات قديمة
+        // دالة تحميل البيانات مع الترحيل الذكي والآمن (تشتغل لمرة واحدة وتحول الفواتير لمستندات مستقلة)
         async function loadCloudData() {
             if (!currentUser) return;
             try {
                 const userDocRef = doc(dbCloud, "workshops", currentUser.uid);
                 const userDocSnap = await getDoc(userDocRef);
 
-                // --- سكريبت الترحيل الذكي للبيانات القديمة ---
+                // --- سكريبت الترحيل الذكي للبيانات القديمة ومنع الضياع ---
                 if (userDocSnap.exists()) {
                     const data = userDocSnap.data();
-                    if (!data.migrated && (data.customers || data.suppliers || data.orders || data.expenses || data.wages || data.logs)) {
-                        console.log("جارٍ ترحيل البيانات القديمة إلى نظام المجموعات الفرعية (Subcollections)...");
+                    if (!data.migratedNewStructure && (data.customers || data.suppliers || data.orders || data.expenses || data.wages || data.logs)) {
+                        console.log("جارٍ ترحيل البيانات القديمة وفصل فواتير الزبائن إلى مستندات مستقلة (Orders/Transactions)...");
                         
                         if (data.customers) {
                             for (let c of data.customers) {
+                                let oldTxs = c.txs || [];
+                                // حفظ الزبون بدون مصفوفة الفواتير الضخمة داخله
+                                delete c.txs;
                                 await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
+                                
+                                // حفظ كل فاتورة أو معاملة قديمة كـ مستند مستقل في مجموعة customer_txs
+                                for (let tx of oldTxs) {
+                                    tx.customerId = String(c.id);
+                                    await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customer_txs", String(tx.id)), tx);
+                                }
                             }
                         }
                         if (data.suppliers) {
@@ -512,24 +517,25 @@
                             }
                         }
 
-                        // حفظ إعدادات الفاتورة وتثبيت علامة أن الترحيل تم بنجاح
+                        // حفظ الإعدادات وتثبيت علامة نجاح الترحيل
                         await setDoc(userDocRef, {
                             invoiceSettings: data.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" },
-                            migrated: true
-                        });
-                        console.log("تم ترحيل البيانات بنجاح تام!");
+                            migratedNewStructure: true
+                        }, { merge: true });
+                        console.log("تم ترحيل وبناء هيكل المستندات المستقلة بنجاح تام!");
                     }
                 }
 
-                // قراءة البيانات من المجموعات الفرعية (Subcollections)
+                // قراءة البيانات من المجموعات السحابية المستقلة
                 window.appData = { customers: [], suppliers: [], orders: [], expenses: [], wages: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
 
                 if (userDocSnap.exists() && userDocSnap.data().invoiceSettings) {
                     window.appData.invoiceSettings = userDocSnap.data().invoiceSettings;
                 }
 
-                const [custSnap, suppSnap, orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
+                const [custSnap, txSnap, suppSnap, orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers")),
+                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "customer_txs")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "orders")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "expenses")),
@@ -537,7 +543,16 @@
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "logs"))
                 ]);
 
-                custSnap.forEach(d => window.appData.customers.push(d.data()));
+                // تجميع فواتير الزبائن وربطها بكل زبون بحسب الـ customerId الخاص بها
+                let allCustomerTxs = [];
+                txSnap.forEach(d => allCustomerTxs.push(d.data()));
+
+                custSnap.forEach(d => {
+                    let custData = d.data();
+                    custData.txs = allCustomerTxs.filter(t => String(t.customerId) === String(custData.id));
+                    window.appData.customers.push(custData);
+                });
+
                 suppSnap.forEach(d => window.appData.suppliers.push(d.data()));
                 orderSnap.forEach(d => window.appData.orders.push(d.data()));
                 expSnap.forEach(d => window.appData.expenses.push(d.data()));
@@ -549,21 +564,31 @@
 
             } catch (e) {
                 console.error("خطأ في الاتصال، جاري استخدام الذاكرة المحلية:", e);
-                window.appData = JSON.parse(localStorage.getItem('workshop_db_v20')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
+                window.appData = JSON.parse(localStorage.getItem('workshop_db_v21')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
                 checkMissingStructures();
                 refreshUI();
             }
         }
 
-        // دوال التخزين السحابي المحسنة (تحديث العنصر المستهدف فقط دون رفع كامل الملف)
+        // دوال التخزين السحابي المحسنة بمعرفات مستقلة تمنع تضخم مستندات الزبون
         window.cloudSave = {
             customer: async (c) => {
                 if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
+                // نحفظ بيانات الزبون الأساسية فقط بدون مصفوفة الفواتير داخله
+                let custToSave = { id: c.id, name: c.name, phone: c.phone };
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), custToSave);
             },
             deleteCustomer: async (id) => {
                 if (!currentUser) return;
                 await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(id)));
+            },
+            customerTx: async (tx) => {
+                if (!currentUser) return;
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customer_txs", String(tx.id)), tx);
+            },
+            deleteCustomerTx: async (txId) => {
+                if (!currentUser) return;
+                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customer_txs", String(txId)));
             },
             supplier: async (s) => {
                 if (!currentUser) return;
@@ -603,7 +628,7 @@
             },
             settings: async () => {
                 if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings, migrated: true }, { merge: true });
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings, migratedNewStructure: true }, { merge: true });
             }
         };
 
@@ -637,8 +662,10 @@
                     if (imported && imported.customers) {
                         if (confirm("⚠️ هل تريد استبدال البيانات الحالية؟")) {
                             window.appData = imported;
-                            // رفع النسخة المستعادة للـ Subcollections
-                            for(let c of window.appData.customers) await window.cloudSave.customer(c);
+                            for(let c of window.appData.customers) {
+                                await window.cloudSave.customer(c);
+                                for(let t of (c.txs || [])) await window.cloudSave.customerTx(t);
+                            }
                             for(let s of window.appData.suppliers) await window.cloudSave.supplier(s);
                             for(let o of window.appData.orders) await window.cloudSave.order(o);
                             for(let w of window.appData.wages) await window.cloudSave.wage(w);
@@ -688,7 +715,7 @@
             updateDash();
         }
         window.save = function() {
-            localStorage.setItem('workshop_db_v20', JSON.stringify(window.appData));
+            localStorage.setItem('workshop_db_v21', JSON.stringify(window.appData));
             refreshUI();
         }
     </script>
@@ -772,7 +799,13 @@
         }
         window.delCust = function(id) { 
             let c = window.appData.customers.find(x => x.id === id);
-            if(c) addLog("حذف زبون", `تم حذف الزبون: ${c.name}`);
+            if(c) {
+                addLog("حذف زبون", `تم حذف الزبون: ${c.name}`);
+                // حذف فواتيره المرتبطة محلياً وسحابياً
+                (c.txs || []).forEach(t => {
+                    if(window.cloudSave && window.cloudSave.deleteCustomerTx) window.cloudSave.deleteCustomerTx(t.id);
+                });
+            }
             window.appData.customers = window.appData.customers.filter(c => c.id !== id); 
             if(window.cloudSave) window.cloudSave.deleteCustomer(id);
             save(); 
@@ -806,15 +839,21 @@
             let desc = document.getElementById('billCustDesc').value;
             let method = document.getElementById('billCustMethod').value;
             
+            let txObj;
             if(editId) {
                 let tx = c.txs.find(t => t.id == editId);
-                if(tx) { tx.desc = desc; tx.total = total; tx.paid = paid; tx.method = method; }
+                if(tx) { 
+                    tx.desc = desc; tx.total = total; tx.paid = paid; tx.method = method; 
+                    txObj = tx;
+                }
                 addLog("تعديل معاملة زبون", `تم تعديل معاملة للزبون ${c.name}`);
             } else {
-                c.txs.push({ id: Date.now(), date: getDate(), desc: desc, total: total, paid: paid, method: method, cardLoss: 0 });
+                txObj = { id: Date.now(), customerId: String(c.id), date: getDate(), desc: desc, total: total, paid: paid, method: method, cardLoss: 0 };
+                c.txs.push(txObj);
                 addLog("إضافة معاملة زبون", `معاملة جديدة للزبون ${c.name}`);
             }
-            if(window.cloudSave) window.cloudSave.customer(c);
+            // حفظ الفاتورة في مستند مستقل سحابياً
+            if(window.cloudSave && window.cloudSave.customerTx) window.cloudSave.customerTx(txObj);
             save(); openCust(c.id);
         }
         window.editCustTx = function(cid, tid) {
@@ -855,7 +894,7 @@
             let c = window.appData.customers.find(x => x.id === cid); 
             c.txs = c.txs.filter(t => t.id !== tid); 
             addLog("حذف معاملة زبون", `حذف معاملة من حساب ${c.name}`);
-            if(window.cloudSave) window.cloudSave.customer(c);
+            if(window.cloudSave && window.cloudSave.deleteCustomerTx) window.cloudSave.deleteCustomerTx(tid);
             save(); openCust(cid); 
         }
 
@@ -1088,13 +1127,16 @@
             if(!customer) return;
             order.status = 'مكتمل';
             if(!customer.txs) customer.txs = [];
-            customer.txs.push({ id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 });
+            
+            let newTx = { id: Date.now(), customerId: String(customer.id), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 };
+            customer.txs.push(newTx);
+            
             addLog("تسليم طلب", `تسليم طلب للزبون ${customer.name}`);
             if(window.cloudSave) {
                 window.cloudSave.order(order);
-                window.cloudSave.customer(customer);
+                window.cloudSave.customerTx(newTx);
             }
-            save(); closeDeliverModal(); alert("تم تسليم الطلب وتحويله لفاتورة بنجاح!");
+            save(); closeDeliverModal(); alert("تم تسليم الطلب وتحويله لفاتورة مستقلة بنجاح!");
         }
 
         // --- أجور العمال ---
@@ -1191,7 +1233,6 @@
         }
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
-        // دالة مشاركة الفاتورة كـ PDF عبر واتساب بنفس هيئة الطباعة تماماً
         window.shareInvoiceWhatsAppPdf = async function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة!"); return; }
