@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام حسابات ورشة الأثاث السحابي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax5/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- تضمين مكتبة QR Code الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="shortcut icon" href="icon.png">
@@ -29,7 +31,7 @@
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
-        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border: none; width: 100%; text-align: right; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
         .dropdown-item.danger { color: var(--danger); }
         .dropdown-item.warning { color: var(--warning); }
@@ -334,7 +336,7 @@
             <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="expensesTable"></tbody></table>
         </div>
 
-        <!-- البحث الشامل -->
+        <!-- 2: البحث عن الزبون - المورد - السيباريش -->
         <div id="t-search" class="section">
             <h2>البحث الشامل (الزبائن - الموردين - الطلبات)</h2>
             <form onsubmit="return false;">
@@ -343,7 +345,7 @@
             <div id="searchResultsContainer"></div>
         </div>
 
-        <!-- الفلترة وسجل التعديلات -->
+        <!-- 1 & 4: الفلترة وسجل التعديلات + إعدادات الفاتورة -->
         <div id="t-filter" class="section">
             <h2>سجل التعديلات والعمليات (الفلترة)</h2>
             <p style="font-size:12px; color:#666; margin-bottom:10px;">يسجل هذا القسم أي عملية تعديل، إضافة أو حذف تتم داخل النظام مع التاريخ والوقت بدقة.</p>
@@ -353,7 +355,6 @@
             </table>
         </div>
 
-        <!-- إعدادات الفاتورة -->
         <div id="t-invoice-settings" class="section">
             <h2>إعدادات الفاتورة (العنوان ورقم الهاتف)</h2>
             <p style="font-size:12px; color:#666; margin-bottom:10px;">يمكنك تعديل بيانات الورشة التي تظهر على الفواتير المطبوعة ورسائل الواتساب متى شئت.</p>
@@ -366,7 +367,7 @@
         </div>
     </div>
 
-    <!-- نافذة الطباعة المنبثقة -->
+    <!-- نافذة الطباعة المنبثقة (مع دعم QR Code ورقم الهاتف والعنوان) -->
     <div id="printModal">
         <div class="invoice-print-box">
             <div id="printableInvoiceArea">
@@ -383,7 +384,7 @@
                     <p><b>المبلغ المدفوع:</b> <span id="pPaid"></span></p>
                     <p><b>طريقة الدفع:</b> <span id="pMethod"></span></p>
                     <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #ccc;">
-                    <p style="font-size: 14px; font-weight: bold;"><b>المتبقي (لهذه الفاتورة):</b> <span id="pRem" style="color: #c0392b;"></span></p>
+                    <p style="font-size: 14px; font-weight: bold;"><b>المبلغ المتبقي:</b> <span id="pRem" style="color: #c0392b;"></span></p>
                 </div>
                 <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="font-size: 12px;">
@@ -614,7 +615,16 @@
         function addLog(actionType, details) {
             if(!window.appData.logs) window.appData.logs = [];
             window.appData.logs.unshift({ id: Date.now(), time: getDateTimeNow(), type: actionType, details: details });
-            if(window.appData.logs.length > 100) window.appData.logs.pop();
+            if(window.appData.logs.length > 100) window.appData.logs.pop(); // الحفاظ على أحدث 100 سجل
+        }
+
+        function renderLogs() {
+            let html = '';
+            if(!window.appData.logs) window.appData.logs = [];
+            window.appData.logs.forEach(l => {
+                html += `<tr><td>${l.time}</td><td><span class="badge" style="background:var(--primary);">${l.type}</span></td><td>${l.details}</td></tr>`;
+            });
+            document.getElementById('auditLogTable').innerHTML = html;
         }
 
         function getCardLossRate(method) {
@@ -623,6 +633,7 @@
             return 0;
         }
 
+        // --- إعدادات الفاتورة ---
         function loadInvoiceSettingsToForm() {
             let s = window.appData.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
             document.getElementById('setInvTitle').value = s.title;
@@ -642,6 +653,7 @@
             alert("✅ تم حفظ إعدادات الفاتورة بنجاح!");
         }
 
+        // --- نظام إشعارات المتصفح والنظام (Push Notifications) ---
         window.requestNotificationPermission = function() {
             if (!("Notification" in window)) {
                 alert("متصفحك لا يدعم الإشعارات المنبثقة.");
@@ -774,8 +786,7 @@
             c.txs.forEach(t => {
                 runningBal += (t.total - t.paid);
                 let currentRem = runningBal;
-                let singleTxRem = t.total - t.paid; // المتبقي الخاص بهذه الفاتورة فقط
-                html += `<tr><td>${t.date}</td><td>${t.desc}</td><td>${t.total ? t.total.toLocaleString() + ' ₺' : '-'}</td><td>${t.paid ? t.paid.toLocaleString() + ' ₺' : '-'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('${c.name}', '${t.date}', '${t.desc}', '${t.total}', '${t.paid}', '${t.method}', '${singleTxRem}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editCustTx(${c.id}, ${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delCustTx(${c.id}, ${t.id})">حذف</button></td></tr>`;
+                html += `<tr><td>${t.date}</td><td>${t.desc}</td><td>${t.total ? t.total.toLocaleString() + ' ₺' : '-'}</td><td>${t.paid ? t.paid.toLocaleString() + ' ₺' : '-'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('${c.name}', '${t.date}', '${t.desc}', '${t.total}', '${t.paid}', '${t.method}', '${currentRem}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editCustTx(${c.id}, ${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delCustTx(${c.id}, ${t.id})">حذف</button></td></tr>`;
             });
             document.getElementById('customerTxTable').innerHTML = html;
         }
@@ -897,8 +908,7 @@
                 let paidNet = t.supplierPaidNet !== undefined ? t.supplierPaidNet : 0;
                 runningBal += (totNet - paidNet);
                 let currentRem = runningBal;
-                let singleTxRem = totNet - paidNet; // المتبقي الخاص بهذه الفاتورة فقط
-                html += `<tr><td>${t.date}</td><td>${t.desc}</td><td>${totNet ? totNet.toLocaleString() + ' ₺' : '-'}</td><td>${paidNet ? paidNet.toLocaleString() + ' ₺' : '0'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="color:var(--warning);">${t.cardLoss ? t.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('${s.name}', '${t.date}', '${t.desc}', '${totNet}', '${paidNet}', '${t.method}', '${singleTxRem}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editSuppTx(${s.id}, ${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delSuppTx(${s.id}, ${t.id})">حذف</button></td></tr>`;
+                html += `<tr><td>${t.date}</td><td>${t.desc}</td><td>${totNet ? totNet.toLocaleString() + ' ₺' : '-'}</td><td>${paidNet ? paidNet.toLocaleString() + ' ₺' : '0'}</td><td><span class="badge ${t.method=='كاش'?'c-cash':'c-card'}">${t.method}</span></td><td style="color:var(--warning);">${t.cardLoss ? t.cardLoss.toLocaleString() + ' ₺' : '0'}</td><td style="font-weight:bold; color:${currentRem>0?'var(--danger)':'inherit'}">${currentRem.toLocaleString()} ₺</td><td><button class="btn btn-print" onclick="printSingleTx('${s.name}', '${t.date}', '${t.desc}', '${totNet}', '${paidNet}', '${t.method}', '${currentRem}')">🖨️ طباعة</button> <button class="btn-edit" onclick="editSuppTx(${s.id}, ${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delSuppTx(${s.id}, ${t.id})">حذف</button></td></tr>`;
             });
             document.getElementById('supplierTxTable').innerHTML = html;
         }
@@ -1035,6 +1045,7 @@
             alert("تم تسليم الطلب وتحويله بنجاح إلى فاتورة في حساب الزبون!");
         }
 
+        // --- 2: البحث الشامل عن الزبون - المورد - السيبيراش ---
         window.performGlobalSearch = function() {
             let query = document.getElementById('globalSearchInput').value.trim().toLowerCase();
             let container = document.getElementById('searchResultsContainer');
@@ -1042,6 +1053,7 @@
 
             let resultsHtml = '';
 
+            // بحث الزبائن
             let matchedCusts = (window.appData.customers || []).filter(c => c.name.toLowerCase().includes(query) || (c.phone && c.phone.toLowerCase().includes(query)));
             if(matchedCusts.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:10px;">الزبائن المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1051,6 +1063,7 @@
                 resultsHtml += `</tbody></table>`;
             }
 
+            // بحث الموردين
             let matchedSupps = (window.appData.suppliers || []).filter(s => s.name.toLowerCase().includes(query) || (s.phone && s.phone.toLowerCase().includes(query)));
             if(matchedSupps.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الموردين المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1060,6 +1073,7 @@
                 resultsHtml += `</tbody></table>`;
             }
 
+            // بحث الطلبات (Siparişler)
             let matchedOrders = (window.appData.orders || []).filter(o => o.customerName.toLowerCase().includes(query) || o.type.toLowerCase().includes(query) || o.fabric.toLowerCase().includes(query) || (o.extra && o.extra.toLowerCase().includes(query)));
             if(matchedOrders.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الطلبات المطابقة (Siparişler):</h3><table><thead><tr><th>التاريخ</th><th>الزبون</th><th>الطقم</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1076,9 +1090,10 @@
             container.innerHTML = resultsHtml;
         }
 
+        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب ---
         let lastPrintedInvoiceData = {};
 
-        window.printSingleTx = function(name, date, desc, total, paid, method, singleTxRem) {
+        window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
             let invSet = window.appData.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
             document.getElementById('invHeaderTitle').innerText = invSet.title;
             document.getElementById('invHeaderAddress').innerText = invSet.address;
@@ -1090,10 +1105,11 @@
             document.getElementById('pTotal').innerText = Number(total).toLocaleString() + ' ₺';
             document.getElementById('pPaid').innerText = Number(paid).toLocaleString() + ' ₺';
             document.getElementById('pMethod').innerText = method;
-            document.getElementById('pRem').innerText = Number(singleTxRem).toLocaleString() + ' ₺';
+            document.getElementById('pRem').innerText = Number(rem).toLocaleString() + ' ₺';
 
-            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem: singleTxRem, phone: invSet.phone, title: invSet.title };
+            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title };
 
+            // توليد QR Code لرقم الهاتف
             let qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
             try {
@@ -1114,6 +1130,7 @@
 
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
+        // --- 3: مشاركة الفاتورة عبر واتساب ---
         window.shareInvoiceWhatsApp = function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة للمشاركة!"); return; }
@@ -1125,7 +1142,7 @@
                        `💰 *المبلغ الإجمالي:* ${Number(d.total).toLocaleString()} ₺\n` +
                        `💵 *المبلغ المدفوع:* ${Number(d.paid).toLocaleString()} ₺\n` +
                        `💳 *طريقة الدفع:* ${d.method}\n` +
-                       `🔴 *المتبقي (لهذه الفاتورة):* ${Number(d.rem).toLocaleString()} ₺\n` +
+                       `🔴 *المبلغ المتبقي:* ${Number(d.rem).toLocaleString()} ₺\n` +
                        `--------------------------\n` +
                        `📞 للتواصل: ${d.phone}`;
             
@@ -1193,6 +1210,7 @@
             save(); 
         }
 
+        // --- الداشبورد والحسابات الجديدة ---
         window.updateDash = function() {
             let tSales = 0, tCustDebt = 0;
             window.appData.customers.forEach(c => {
@@ -1222,6 +1240,7 @@
                 return sum + s.txs.reduce((a,b)=>a+(b.cardLoss||0),0);
             }, 0) + (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
 
+            // الحسابات المعتمدة:
             let grossIncome = tSales - (tPurchases + cLoss);
             let netProfit = tSales - (tPurchases + cLoss + totalWages);
             let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
