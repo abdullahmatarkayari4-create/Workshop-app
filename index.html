@@ -144,7 +144,7 @@
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ هيكل المجموعات الفرعية الفردية (Subcollections) مفعل ومحمّي لضمان جلب كل الفواتير القديمة.</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ هيكل المجموعات الفرعية الفردية (Subcollections) مفعل ومحمّي لضمان جلب وحفظ كل الفواتير.</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
@@ -477,23 +477,20 @@
                     window.appData.invoiceSettings = userDocSnap.data().invoiceSettings;
                 }
 
-                // 1. جترحيل وتحميل الزبائن وفواتيرهم القديمة والجديدة
+                // 1. ترحيل وتحميل الزبائن وفواتيرهم القديمة والجديدة
                 const custSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers"));
                 for (let custDoc of custSnap.docs) {
                     let cData = custDoc.data();
                     
-                    // إذا وجدنا فواتير قديمة مخزنة كمصفوفة داخل الزبون، نقوم بترحيلها فوراً للمجموعة الفرعية لضمان عدم ضياعها
                     if (Array.isArray(cData.txs) && cData.txs.length > 0) {
                         for (let t of cData.txs) {
                             if (!t.id) t.id = Date.now() + Math.floor(Math.random() * 1000);
                             await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cData.id), "transactions", String(t.id)), t);
                         }
-                        // حذف المصفوفة القديمة من المستند الرئيسي بعد ترحيلها بنجاح لتنظيف المستند
                         delete cData.txs;
                         await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cData.id)), cData);
                     }
 
-                    // قراءة الفواتير من المجموعة الفرعية الخاصة بالزبون
                     const txsSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers", String(cData.id), "transactions"));
                     cData.txs = [];
                     txsSnap.forEach(tDoc => cData.txs.push(tDoc.data()));
@@ -502,7 +499,7 @@
                     window.appData.customers.push(cData);
                 }
 
-                // 2. جرحيل وتحميل الموردين وفواتيرهم القديمة والجديدة
+                // 2. ترحيل وتحميل الموردين وفواتيرهم القديمة والجديدة
                 const suppSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers"));
                 for (let suppDoc of suppSnap.docs) {
                     let sData = suppDoc.data();
@@ -524,7 +521,7 @@
                     window.appData.suppliers.push(sData);
                 }
 
-                // 3. جلب باقي البيانات (الطلبات، المصاريف، الأجور، السجلات)
+                // 3. جلب باقي البيانات
                 const [orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "orders")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "expenses")),
@@ -548,7 +545,6 @@
             }
         }
 
-        // دوال الحفظ الفردي المباشر لكل عنصر في مكانه
         window.cloudSave = {
             customer: async (c) => {
                 if (!currentUser) return;
@@ -793,7 +789,6 @@
             document.getElementById('salesMainView').style.display = 'none';
             document.getElementById('salesDetailView').style.display = 'block';
             
-            // جلب المعاملات المحدثة من المجموعة الفرعية للزبون لضمان عرض كل الفواتير بدقة
             try {
                 const txSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions"));
                 c.txs = [];
@@ -837,16 +832,26 @@
                 cardLoss: 0 
             };
 
-            // حفظ الفاتورة في المجموعة الفرعية المستقلة الخاصة بالزبون
+            // تحديث محلي في الذاكرة أولاً لضمان ظهور الفاتورة فوراً دون أي تأخير
+            if (editId) {
+                let idx = c.txs.findIndex(t => t.id == editId);
+                if (idx !== -1) c.txs[idx] = tx;
+                else c.txs.push(tx);
+            } else {
+                c.txs.push(tx);
+            }
+            c.txs.sort((a, b) => a.id - b.id);
+
+            // الحفظ السحابي
             if(currentUser) {
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions", String(tx.id)), tx);
+                try {
+                    await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions", String(tx.id)), tx);
+                } catch(err) {
+                    console.error("Cloud save error:", err);
+                }
             }
 
-            if(editId) {
-                addLog("تعديل معاملة زبون", `تم تعديل معاملة للزبون ${c.name}`);
-            } else {
-                addLog("إضافة معاملة زبون", `معاملة جديدة للزبون ${c.name}`);
-            }
+            addLog(editId ? "تعديل معاملة زبون" : "إضافة معاملة زبون", `معاملة للزبون ${c.name}`);
             save(); 
             openCust(c.id);
         }
@@ -887,7 +892,9 @@
         window.delCustTx = async function(cid, tid) { 
             let c = window.appData.customers.find(x => x.id === cid); 
             if(currentUser) {
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cid), "transactions", String(tid)));
+                try {
+                    await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cid), "transactions", String(tid)));
+                } catch(e){ console.error(e); }
             }
             c.txs = c.txs.filter(t => t.id !== tid); 
             addLog("حذف معاملة زبون", `حذف معاملة من حساب ${c.name}`);
@@ -981,15 +988,24 @@
                 cardLoss: paymentCardLoss 
             };
 
+            if (editId) {
+                let idx = s.txs.findIndex(t => t.id == editId);
+                if (idx !== -1) s.txs[idx] = tx;
+                else s.txs.push(tx);
+            } else {
+                s.txs.push(tx);
+            }
+            s.txs.sort((a, b) => a.id - b.id);
+
             if(currentUser) {
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id), "transactions", String(tx.id)), tx);
+                try {
+                    await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id), "transactions", String(tx.id)), tx);
+                } catch(err) {
+                    console.error("Cloud save error:", err);
+                }
             }
 
-            if(editId) {
-                addLog("تعديل معاملة مورد", `تعديل معاملة للمورد ${s.name}`);
-            } else {
-                addLog("إضافة معاملة مورد", `معاملة جديدة للمورد ${s.name}`);
-            }
+            addLog(editId ? "تعديل معاملة مورد" : "إضافة معاملة مورد", `معاملة للمورد ${s.name}`);
             save(); openSupp(s.id);
         }
         window.editSuppTx = function(sid, tid) {
@@ -1030,7 +1046,9 @@
         window.delSuppTx = async function(sid, tid) { 
             let s = window.appData.suppliers.find(x => x.id === sid); 
             if(currentUser) {
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sid), "transactions", String(tid)));
+                try {
+                    await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sid), "transactions", String(tid)));
+                } catch(e){ console.error(e); }
             }
             s.txs = s.txs.filter(t => t.id !== tid); 
             addLog("حذف معاملة مورد", `حذف معاملة من ${s.name}`);
@@ -1152,9 +1170,12 @@
             let tx = { id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 };
             if(!customer.txs) customer.txs = [];
             customer.txs.push(tx);
+            customer.txs.sort((a, b) => a.id - b.id);
 
             if(currentUser) {
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(customer.id), "transactions", String(tx.id)), tx);
+                try {
+                    await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(customer.id), "transactions", String(tx.id)), tx);
+                } catch(e){ console.error(e); }
             }
 
             addLog("تسليم طلب", `تسليم طلب للزبون ${customer.name}`);
