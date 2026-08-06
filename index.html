@@ -1125,7 +1125,7 @@
 
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
-        // --- مشاركة فاتورة بصيغة PDF عبر واتساب ---
+        // --- مشاركة فاتورة بصيغة PDF عبر واتساب (مطابقة لنظام الطباعة دون أي إجبار للترجمة أو تغيير لغات الحقول) ---
         window.shareInvoiceWhatsAppPDF = function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة للمشاركة!"); return; }
@@ -1134,15 +1134,15 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
 
-                // إعداد الخطوط والتصميم الأساسي لملف الـ PDF
+                // الحفاظ على العناوين وحقول البيانات كما هي بدون أي ترجمة قسرية
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(18);
-                doc.text(d.title || "Workshop Invoice", 105, 20, { align: "center" });
+                doc.text(d.title || "", 105, 20, { align: "center" });
 
                 doc.setFontSize(11);
                 doc.setFont("helvetica", "normal");
-                doc.text("Address: " + (d.address || ""), 105, 28, { align: "center" });
-                doc.text("Phone: " + (d.phone || ""), 105, 34, { align: "center" });
+                doc.text(d.address || "", 105, 28, { align: "center" });
+                doc.text(d.phone || "", 105, 34, { align: "center" });
 
                 doc.setLineWidth(0.5);
                 doc.line(20, 40, 190, 40);
@@ -1151,12 +1151,13 @@
                 let startY = 52;
                 let lineHeight = 10;
 
-                doc.text("Date: " + d.date, 20, startY);
-                doc.text("Account Name: " + d.name, 20, startY + lineHeight);
-                doc.text("Description: " + d.desc, 20, startY + (lineHeight * 2));
-                doc.text("Total Amount: " + Number(d.total).toLocaleString() + " TRY", 20, startY + (lineHeight * 3));
-                doc.text("Paid Amount: " + Number(d.paid).toLocaleString() + " TRY", 20, startY + (lineHeight * 4));
-                doc.text("Payment Method: " + d.method, 20, startY + (lineHeight * 5));
+                // اعتماد الحقول الأصلية المطابقة تماماً لنافذة الطباعة
+                doc.text("التاريخ: " + d.date, 20, startY);
+                doc.text("اسم الحساب: " + d.name, 20, startY + lineHeight);
+                doc.text("البيان: " + d.desc, 20, startY + (lineHeight * 2));
+                doc.text("المبلغ الإجمالي / البضاعة: " + Number(d.total).toLocaleString() + " ₺", 20, startY + (lineHeight * 3));
+                doc.text("المبلغ المدفوع: " + Number(d.paid).toLocaleString() + " ₺", 20, startY + (lineHeight * 4));
+                doc.text("طريقة الدفع: " + d.method, 20, startY + (lineHeight * 5));
 
                 doc.setLineWidth(0.3);
                 doc.line(20, startY + (lineHeight * 6) - 4, 190, startY + (lineHeight * 6) - 4);
@@ -1164,9 +1165,8 @@
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(14);
                 doc.setTextColor(192, 57, 43);
-                doc.text("Remaining Balance: " + Number(d.rem).toLocaleString() + " TRY", 20, startY + (lineHeight * 6) + 5);
+                doc.text("المبلغ المتبقي: " + Number(d.rem).toLocaleString() + " ₺", 20, startY + (lineHeight * 6) + 5);
 
-                // تحويل ملف الـ PDF إلى رابط بيانات (Data URL) ومشاركته
                 let pdfOutput = doc.output('datauristring');
                 let blobBin = atob(pdfOutput.split(',')[1]);
                 let array = [];
@@ -1181,11 +1181,10 @@
                     let pdfFile = new File([file], `invoice_${d.name}.pdf`, { type: "application/pdf" });
                     navigator.share({
                         files: [pdfFile],
-                        title: 'فاتورة الحساب',
-                        text: `إليك فاتورة الحساب الخاصة بـ ${d.name}`
+                        title: 'الفاتورة',
+                        text: `فاتورة الحساب لـ: ${d.name}`
                     }).catch(() => {});
                 } else {
-                    // فتح خيار التحميل وتوجيه المستخدم للاتصال بالواتساب
                     let downloadLink = document.createElement('a');
                     downloadLink.href = fileURL;
                     downloadLink.download = `Invoice_${d.name}_${d.date}.pdf`;
@@ -1193,7 +1192,7 @@
                     downloadLink.click();
                     downloadLink.remove();
 
-                    let waText = encodeURIComponent(`📄 *${d.title}*\n👤 الحساب: ${d.name}\n📅 التاريخ: ${d.date}\n🔴 المتبقي: ${Number(d.rem).toLocaleString()} ₺\n\n(تم تحميل ملف الـ PDF الخاص بالفاتورة على جهازك، يمكنك إرفاقه هنا مباشرةً).`);
+                    let waText = encodeURIComponent(`📄 *${d.title}*\n👤 الحساب: ${d.name}\n📅 التاريخ: ${d.date}\n🔴 المتبقي: ${Number(d.rem).toLocaleString()} ₺\n\n(تم تحميل ملف الـ PDF المطابق للطباعة على جهازك، يمكنك إرفاقه هنا مباشرةً).`);
                     window.open(`https://api.whatsapp.com/send?text=${waText}`, '_blank');
                 }
             } catch (err) {
