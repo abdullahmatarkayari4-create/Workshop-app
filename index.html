@@ -8,8 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax5/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- تضمين مكتبة QR Code الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- تضمين مكتبة jsPDF لتوليد ملفات الـ PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="shortcut icon" href="icon.png">
@@ -369,7 +367,7 @@
         </div>
     </div>
 
-    <!-- نافذة الطباعة المنبثقة (بدون توقيع الورشة مع دعم QR Code ورقم الهاتف والعنوان) -->
+    <!-- نافذة الطباعة المنبثقة (مع دعم QR Code ورقم الهاتف والعنوان) -->
     <div id="printModal">
         <div class="invoice-print-box">
             <div id="printableInvoiceArea">
@@ -388,12 +386,15 @@
                     <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #ccc;">
                     <p style="font-size: 14px; font-weight: bold;"><b>المبلغ المتبقي:</b> <span id="pRem" style="color: #c0392b;"></span></p>
                 </div>
-                <div style="margin-top: 20px; display: flex; justify-content: flex-end; align-items: center;">
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 12px;">
+                        <span>توقيع الورشة: ....................</span>
+                    </div>
                     <div id="qrcode" style="padding: 5px; background: white; border: 1px solid #ddd;"></div>
                 </div>
             </div>
             <div class="no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
-                <button class="btn-whatsapp" onclick="shareInvoiceWhatsAppPDF()">مشاركة ملف PDF عبر واتساب 💬</button>
+                <button class="btn-whatsapp" onclick="shareInvoiceWhatsApp()">مشاركة عبر واتساب 💬</button>
                 <button class="btn" onclick="window.print()">طباعة الآن</button>
                 <button class="btn btn-back" onclick="closePrintModal()" style="margin:0;">إغلاق</button>
             </div>
@@ -614,7 +615,7 @@
         function addLog(actionType, details) {
             if(!window.appData.logs) window.appData.logs = [];
             window.appData.logs.unshift({ id: Date.now(), time: getDateTimeNow(), type: actionType, details: details });
-            if(window.appData.logs.length > 100) window.appData.logs.pop();
+            if(window.appData.logs.length > 100) window.appData.logs.pop(); // الحفاظ على أحدث 100 سجل
         }
 
         function renderLogs() {
@@ -1052,6 +1053,7 @@
 
             let resultsHtml = '';
 
+            // بحث الزبائن
             let matchedCusts = (window.appData.customers || []).filter(c => c.name.toLowerCase().includes(query) || (c.phone && c.phone.toLowerCase().includes(query)));
             if(matchedCusts.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:10px;">الزبائن المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1061,6 +1063,7 @@
                 resultsHtml += `</tbody></table>`;
             }
 
+            // بحث الموردين
             let matchedSupps = (window.appData.suppliers || []).filter(s => s.name.toLowerCase().includes(query) || (s.phone && s.phone.toLowerCase().includes(query)));
             if(matchedSupps.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الموردين المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1070,6 +1073,7 @@
                 resultsHtml += `</tbody></table>`;
             }
 
+            // بحث الطلبات (Siparişler)
             let matchedOrders = (window.appData.orders || []).filter(o => o.customerName.toLowerCase().includes(query) || o.type.toLowerCase().includes(query) || o.fabric.toLowerCase().includes(query) || (o.extra && o.extra.toLowerCase().includes(query)));
             if(matchedOrders.length > 0) {
                 resultsHtml += `<h3 style="font-size:14px; color:var(--secondary); margin-top:15px;">الطلبات المطابقة (Siparişler):</h3><table><thead><tr><th>التاريخ</th><th>الزبون</th><th>الطقم</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>`;
@@ -1086,7 +1090,7 @@
             container.innerHTML = resultsHtml;
         }
 
-        // --- طباعة الفاتورة والـ QR Code ومشاركة الـ PDF عبر واتساب ---
+        // --- طباعة الفاتورة والـ QR Code و مشاركة الواتساب ---
         let lastPrintedInvoiceData = {};
 
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
@@ -1103,8 +1107,9 @@
             document.getElementById('pMethod').innerText = method;
             document.getElementById('pRem').innerText = Number(rem).toLocaleString() + ' ₺';
 
-            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title, address: invSet.address };
+            lastPrintedInvoiceData = { name, date, desc, total, paid, method, rem, phone: invSet.phone, title: invSet.title };
 
+            // توليد QR Code لرقم الهاتف
             let qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
             try {
@@ -1125,79 +1130,24 @@
 
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
-        // --- مشاركة فاتورة بصيغة PDF عبر واتساب (مطابقة لنظام الطباعة دون أي إجبار للترجمة أو تغيير لغات الحقول) ---
-        window.shareInvoiceWhatsAppPDF = function() {
+        // --- 3: مشاركة الفاتورة عبر واتساب ---
+        window.shareInvoiceWhatsApp = function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة للمشاركة!"); return; }
-
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-
-                // الحفاظ على العناوين وحقول البيانات كما هي بدون أي ترجمة قسرية
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(18);
-                doc.text(d.title || "", 105, 20, { align: "center" });
-
-                doc.setFontSize(11);
-                doc.setFont("helvetica", "normal");
-                doc.text(d.address || "", 105, 28, { align: "center" });
-                doc.text(d.phone || "", 105, 34, { align: "center" });
-
-                doc.setLineWidth(0.5);
-                doc.line(20, 40, 190, 40);
-
-                doc.setFontSize(12);
-                let startY = 52;
-                let lineHeight = 10;
-
-                // اعتماد الحقول الأصلية المطابقة تماماً لنافذة الطباعة
-                doc.text("التاريخ: " + d.date, 20, startY);
-                doc.text("اسم الحساب: " + d.name, 20, startY + lineHeight);
-                doc.text("البيان: " + d.desc, 20, startY + (lineHeight * 2));
-                doc.text("المبلغ الإجمالي / البضاعة: " + Number(d.total).toLocaleString() + " ₺", 20, startY + (lineHeight * 3));
-                doc.text("المبلغ المدفوع: " + Number(d.paid).toLocaleString() + " ₺", 20, startY + (lineHeight * 4));
-                doc.text("طريقة الدفع: " + d.method, 20, startY + (lineHeight * 5));
-
-                doc.setLineWidth(0.3);
-                doc.line(20, startY + (lineHeight * 6) - 4, 190, startY + (lineHeight * 6) - 4);
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(14);
-                doc.setTextColor(192, 57, 43);
-                doc.text("المبلغ المتبقي: " + Number(d.rem).toLocaleString() + " ₺", 20, startY + (lineHeight * 6) + 5);
-
-                let pdfOutput = doc.output('datauristring');
-                let blobBin = atob(pdfOutput.split(',')[1]);
-                let array = [];
-                for (let i = 0; i < blobBin.length; i++) {
-                    array.push(blobBin.charCodeAt(i));
-                }
-                let file = new Blob([new Uint8Array(array)], { type: 'application/pdf' });
-                let fileURL = URL.createObjectURL(file);
-
-                let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile && navigator.canShare && navigator.canShare({ files: [new File([file], "invoice.pdf", { type: "application/pdf" })] })) {
-                    let pdfFile = new File([file], `invoice_${d.name}.pdf`, { type: "application/pdf" });
-                    navigator.share({
-                        files: [pdfFile],
-                        title: 'الفاتورة',
-                        text: `فاتورة الحساب لـ: ${d.name}`
-                    }).catch(() => {});
-                } else {
-                    let downloadLink = document.createElement('a');
-                    downloadLink.href = fileURL;
-                    downloadLink.download = `Invoice_${d.name}_${d.date}.pdf`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    downloadLink.remove();
-
-                    let waText = encodeURIComponent(`📄 *${d.title}*\n👤 الحساب: ${d.name}\n📅 التاريخ: ${d.date}\n🔴 المتبقي: ${Number(d.rem).toLocaleString()} ₺\n\n(تم تحميل ملف الـ PDF المطابق للطباعة على جهازك، يمكنك إرفاقه هنا مباشرةً).`);
-                    window.open(`https://api.whatsapp.com/send?text=${waText}`, '_blank');
-                }
-            } catch (err) {
-                alert("حدث خطأ أثناء إنشاء ملف الـ PDF: " + err.message);
-            }
+            let text = `📄 *${d.title || 'فاتورة ورشة الأثاث'}*\n` +
+                       `--------------------------\n` +
+                       `👤 *الحساب:* ${d.name}\n` +
+                       `📅 *التاريخ:* ${d.date}\n` +
+                       `📝 *البيان:* ${d.desc}\n` +
+                       `💰 *المبلغ الإجمالي:* ${Number(d.total).toLocaleString()} ₺\n` +
+                       `💵 *المبلغ المدفوع:* ${Number(d.paid).toLocaleString()} ₺\n` +
+                       `💳 *طريقة الدفع:* ${d.method}\n` +
+                       `🔴 *المبلغ المتبقي:* ${Number(d.rem).toLocaleString()} ₺\n` +
+                       `--------------------------\n` +
+                       `📞 للتواصل: ${d.phone}`;
+            
+            let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(whatsappUrl, '_blank');
         }
 
         // --- أجور العمال ---
@@ -1290,6 +1240,7 @@
                 return sum + s.txs.reduce((a,b)=>a+(b.cardLoss||0),0);
             }, 0) + (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
 
+            // الحسابات المعتمدة:
             let grossIncome = tSales - (tPurchases + cLoss);
             let netProfit = tSales - (tPurchases + cLoss + totalWages);
             let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
