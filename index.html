@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام حسابات ورشة الأثاث السحابي (الهيكل المحسن)</title>
+    <title>نظام حسابات ورشة الأثاث السحابي (الإصدار المطوّر)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- مكتبة QR Code -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <!-- مكتبة تحويل الفاتورة إلى PDF للمشاركة عبر واتساب -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="shortcut icon" href="icon.png">
-    <link rel="manifest" href="manifest.json">
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #c0392b; --warning: #d35400; --bg: #f4f6f7; --card: #ffffff; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -27,10 +24,8 @@
         .stat-card h3 { font-size: 15px; color: #7f8c8d; margin-bottom: 10px; font-weight: bold; }
         .stat-card .val { font-size: 26px; font-weight: bold; color: var(--primary); }
         
-        .alert-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        
         .menu-btn { background: transparent; border: 2px solid white; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 250px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
+        .dropdown-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; color: #333; width: 260px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; text-align: right; overflow: hidden; border: 1px solid #ddd; }
         .dropdown-menu.show { display: block; }
         .dropdown-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; font-size: 13px; display: block; color: var(--primary); background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: right; }
         .dropdown-item:hover { background: #f0f3f4; color: var(--secondary); }
@@ -61,37 +56,19 @@
         .clickable:hover { text-decoration: underline; }
         .sub-box { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
         .hidden { display: none !important; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { background: #e0e0e0; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .tab-btn.active { background: var(--secondary); color: white; }
 
         #printModal, #deliverModal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;
         }
-        .invoice-print-box {
-            background: white;
-            width: 520px;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
+        .invoice-print-box { background: white; width: 520px; padding: 25px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
         @media print {
             body * { visibility: hidden !important; }
             #printModal, #printModal * { visibility: visible !important; }
-            #printModal {
-                position: fixed !important;
-                top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;
-                background: white !important; z-index: 999999 !important;
-                display: flex !important; justify-content: center !important; align-items: flex-start !important;
-                padding-top: 10px !important;
-            }
+            #printModal { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: white !important; z-index: 999999 !important; display: flex !important; justify-content: center !important; align-items: flex-start !important; padding-top: 10px !important; }
             .invoice-print-box { width: 100% !important; max-width: 100% !important; box-shadow: none !important; border: none !important; padding: 10px !important; margin: 0 !important; max-height: none !important; overflow: visible !important; }
             .no-print { display: none !important; }
         }
@@ -103,7 +80,7 @@
     <div id="login-box" class="container" style="max-width: 450px; margin-top: 100px;">
         <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
             <h1 style="font-size: 22px; color: var(--primary); margin-bottom: 15px;">تسجيل الدخول لنظام الورشة السحابي</h1>
-            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">سجل بحساب جوجل لتتم مزامنة بياناتك أوتوماتيكياً</p>
+            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">سجل بحساب جوجل لتتم مزامنة بياناتك ونظام المستندات الفرعية أوتوماتيكياً</p>
             <button type="button" onclick="loginWithGoogle()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; color: #444;">
                 <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -126,34 +103,33 @@
                     <button class="dropdown-item" onclick="switchSection('t-sales')">👥 الزبائن</button>
                     <button class="dropdown-item" onclick="switchSection('t-costs')">📦 الموردين</button>
                     <button class="dropdown-item" onclick="switchSection('t-orders')">📋 الطلبات (Siparişler)</button>
+                    <button class="dropdown-item" onclick="switchSection('t-resources')">🪵 الموارد (خشب، سفنج، قماش، نواعم)</button>
+                    <button class="dropdown-item" onclick="switchSection('t-tools')">🛠️ العدة والأجهزة</button>
                     <button class="dropdown-item" onclick="switchSection('t-wages')">👷 أجور العمال</button>
                     <button class="dropdown-item" onclick="switchSection('t-exp')">💸 المصاريف</button>
                     <button class="dropdown-item info" onclick="switchSection('t-search')">🔍 البحث الشامل</button>
-                    <button class="dropdown-item warning" onclick="switchSection('t-filter')">⚙️ الفلترة وسجل التعديلات</button>
+                    <button class="dropdown-item warning" onclick="switchSection('t-filter')">⚙️ سجل التعديلات</button>
                     <button class="dropdown-item info" onclick="switchSection('t-invoice-settings')">📄 إعدادات الفاتورة</button>
                     <div style="border-top: 2px solid #eee; margin: 4px 0;"></div>
-                    <div style="padding: 6px 15px; font-size: 11px; color: #7f8c8d; font-weight: bold;">الإعدادات والنسخ</div>
-                    <button class="dropdown-item info" onclick="requestNotificationPermission()">🔔 تفعيل إشعارات المواعيد</button>
+                    <button class="dropdown-item info" onclick="requestRealNotifications()">🔔 تفعيل الإشعارات الحقيقية</button>
                     <button class="dropdown-item info" onclick="exportBackup()">📥 تصدير نسخة احتياطية</button>
                     <button class="dropdown-item info" onclick="document.getElementById('importFile').click()">📤 استعادة نسخة احتياطية</button>
                     <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBackup(event)">
-                    <button class="dropdown-item warning" onclick="resetCloudData()">🔄 تصفير البيانات السحابية</button>
+                    <button class="dropdown-item warning" onclick="resetCloudData()">🔄 تصفير البيانات</button>
                     <button class="dropdown-item danger" onclick="logout()">🚪 تسجيل الخروج</button>
                 </div>
             </div>
-
-            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (سحابي محسّن)</h1>
+            <h1 style="font-size: 16px;">نظام حسابات ورشة الأثاث (الإصدار المطوّر)</h1>
             <div style="width: 40px;"></div>
         </header>
 
         <div class="sync-bar">
-            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ نظام المجموعات الفرعية السحابي (Collections) مفعل ومزامنة فورية نشطة.</span>
+            <span style="font-size: 12px; color: #2980b9; font-weight: bold;">☁️ نظام المستندات الفرعية (Subcollections) المعزولة للكل مفعل بنجاح.</span>
             <span id="userEmailDisplay" style="font-size: 11px; color: #555;"></span>
         </div>
 
         <!-- الشاشة الرئيسية -->
         <div id="t-home" class="section active">
-            <div id="deliveryAlertContainer"></div>
             <h2>لوحة المؤشرات العامة (Dashboard)</h2>
             <div class="dashboard" style="margin-top: 15px;">
                 <div class="stat-card"><h3>إجمالي المبيعات</h3><div class="val" id="dSales">0 ₺</div></div>
@@ -161,9 +137,7 @@
                 <div class="stat-card"><h3>ديون الزبائن</h3><div class="val" id="dCustDebt">0 ₺</div></div>
                 <div class="stat-card"><h3>ديون الموردين</h3><div class="val" id="dSuppDebt">0 ₺</div></div>
                 <div class="stat-card" style="border-top-color: var(--warning);"><h3>خسارة الكروت</h3><div class="val" id="dCardLoss">0 ₺</div></div>
-                <div class="stat-card" id="cardNetProfit" style="border-top-color: var(--success);"><h3>الربح الصافي</h3><div class="val" id="dNetProfit" style="color: var(--success);">0 ₺</div></div>
-                <div class="stat-card" id="cardGrossIncome" style="border-top-color: var(--secondary);"><h3>الدخل الإجمالي</h3><div class="val" id="dGrossIncome" style="color: var(--secondary);">0 ₺</div></div>
-                <div class="stat-card" id="cardTotalBudget" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
+                <div class="stat-card" style="border-top-color: var(--danger);"><h3>إجمالي ميزانية الورشة</h3><div class="val" id="dTotalBudget" style="color: var(--danger);">0 ₺</div></div>
             </div>
         </div>
 
@@ -183,7 +157,7 @@
                 <button class="btn btn-back" onclick="backToCustomers()">← رجوع للقائمة</button>
                 <h2 id="detCustTitle">حساب الزبون: </h2>
                 <div class="sub-box">
-                    <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">1. تسجيل فاتورة بضاعة جديدة للزبون</h3>
+                    <h3 id="custFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">تسجيل فاتورة أو حركة مستقلة للزبون</h3>
                     <form id="custActionForm" onsubmit="saveCustomerAction(event)">
                         <input type="hidden" id="editCustTxId">
                         <div class="group"><label>نوع الحركة</label>
@@ -195,7 +169,7 @@
                         <div class="group"><label>التفاصيل / البيان</label><input type="text" id="billCustDesc" required placeholder="غرفة، صالون، دفعة..."></div>
                         <div class="group" id="groupCustTotal"><label>قيمة الفاتورة</label><input type="number" id="billCustTotal" placeholder="0"></div>
                         <div class="group"><label>الواصل / المدفوع</label><input type="number" id="billCustPaid" value="0" required placeholder="0"></div>
-                        <div class="group"><label>طريقة الدفع / القبض</label>
+                        <div class="group"><label>طريقة الدفع</label>
                             <select id="billCustMethod">
                                 <option value="كاش">كاش</option>
                                 <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
@@ -204,12 +178,12 @@
                             </select>
                         </div>
                         <div style="grid-column: 1/-1; display:flex; gap:10px;">
-                            <button class="btn" id="custSubmitBtn">حفظ الفاتورة</button>
+                            <button class="btn" id="custSubmitBtn">حفظ الفاتورة بمستند مستقل</button>
                             <button type="button" class="btn btn-back" id="cancelCustEditBtn" style="display:none;" onclick="cancelCustEdit()">إلغاء التعديل</button>
                         </div>
                     </form>
                 </div>
-                <table><thead><tr><th>التاريخ</th><th>البيان / العملية</th><th>قيمة البضاعة</th><th>المدفوع / المقبوض</th><th>الطريقة</th><th>الباقي</th><th>إجراء</th></tr></thead><tbody id="customerTxTable"></tbody></table>
+                <table><thead><tr><th>التاريخ</th><th>البيان / العملية</th><th>قيمة البضاعة</th><th>المدفوع</th><th>الطريقة</th><th>الباقي</th><th>إجراء</th></tr></thead><tbody id="customerTxTable"></tbody></table>
             </div>
         </div>
 
@@ -229,7 +203,7 @@
                 <button class="btn btn-back" onclick="backToSuppliers()">← رجوع للقائمة</button>
                 <h2 id="detSuppTitle">حساب المورد: </h2>
                 <div class="sub-box">
-                    <h3 id="suppFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">1. تسجيل فاتورة بضاعة جديدة من المورد</h3>
+                    <h3 id="suppFormTitle" style="font-size:13px; color:var(--primary); margin-bottom:8px;">تسجيل فاتورة مستقلة للمورد</h3>
                     <form id="suppActionForm" onsubmit="saveSupplierAction(event)">
                         <input type="hidden" id="editSuppTxId">
                         <div class="group"><label>نوع الحركة</label>
@@ -239,30 +213,29 @@
                             </select>
                         </div>
                         <div class="group"><label>التفاصيل / البيان</label><input type="text" id="billSuppDesc" required placeholder="خشب، إسفنج..."></div>
-                        <div class="group" id="groupSuppRawTotal"><label>قيمة الفاتورة المسجلة</label><input type="number" id="billSuppTotal" placeholder="0"></div>
+                        <div class="group" id="groupSuppRawTotal"><label>قيمة الفاتورة</label><input type="number" id="billSuppTotal" placeholder="0"></div>
                         <div class="group" id="groupSuppType"><label>نوع الفاتورة</label>
                             <select id="billSuppType">
-                                <option value="عادية">عادية (بدون إضافة كرت)</option>
-                                <option value="شاملة_كرت_10">مضاف عليها كرت تقسيط 10%</option>
-                                <option value="شاملة_كرت_5">مضاف عليها كرت Tek Çekim 5%</option>
+                                <option value="عادية">عادية</option>
+                                <option value="شاملة_كرت_10">مضاف عليها كرت 10%</option>
+                                <option value="شاملة_كرت_5">مضاف عليها كرت 5%</option>
                             </select>
                         </div>
-                        <div class="group"><label>المبلغ المدفوع مع الحركة</label><input type="number" id="billSuppPaid" value="0" required placeholder="0"></div>
+                        <div class="group"><label>المبلغ المدفوع</label><input type="number" id="billSuppPaid" value="0" required placeholder="0"></div>
                         <div class="group"><label>طريقة الدفع</label>
                             <select id="billSuppMethod">
                                 <option value="كاش">كاش</option>
                                 <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
                                 <option value="كرت Tek Çekim 5%">كرت Tek Çekim (خصم 5%)</option>
-                                <option value="كرت Tek Çekim 0%">كرت Tek Çekim (بدون خصم)</option>
                             </select>
                         </div>
                         <div style="grid-column: 1/-1; display:flex; gap:10px;">
-                            <button class="btn" id="suppSubmitBtn">حفظ الفاتورة</button>
+                            <button class="btn" id="suppSubmitBtn">حفظ بمستند مستقل</button>
                             <button type="button" class="btn btn-back" id="cancelSuppEditBtn" style="display:none;" onclick="cancelSuppEdit()">إلغاء التعديل</button>
                         </div>
                     </form>
                 </div>
-                <table><thead><tr><th>التاريخ</th><th>البيان / العملية</th><th>قيمة الفاتورة</th><th>المبلغ المسدد</th><th>الطريقة</th><th>خسارة الكرت</th><th>الباقي</th><th>إجراء</th></tr></thead><tbody id="supplierTxTable"></tbody></table>
+                <table><thead><tr><th>التاريخ</th><th>البيان</th><th>قيمة الفاتورة</th><th>المسدد</th><th>الطريقة</th><th>خسارة الكرت</th><th>الباقي</th><th>إجراء</th></tr></thead><tbody id="supplierTxTable"></tbody></table>
             </div>
         </div>
 
@@ -271,7 +244,7 @@
             <h2 id="orderFormTitle">إدارة الطلبات (Siparişler)</h2>
             <form id="orderForm" onsubmit="saveOrder(event)">
                 <input type="hidden" id="editOrderId">
-                <div class="group"><label>اختر الزبون (الشوروم)</label><select id="orderCustSelect" required></select></div>
+                <div class="group"><label>اختر الزبون</label><select id="orderCustSelect" required></select></div>
                 <div class="group"><label>نوع الطقم</label><input type="text" id="orderType" required placeholder="مثال: صالون مودرن"></div>
                 <div class="group"><label>سعر الطقم (ليرة)</label><input type="number" id="orderPrice" required placeholder="0"></div>
                 <div class="group"><label>تاريخ التسليم المتوقع</label><input type="date" id="orderDueDate" required></div>
@@ -289,6 +262,48 @@
             </table>
         </div>
 
+        <!-- قسم الموارد (خشب، سفنج، قماش، نواعم) -->
+        <div id="t-resources" class="section">
+            <h2>إدارة الموارد والمخزون</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchResourceTab('wood')">🪵 خشب</button>
+                <button class="tab-btn" onclick="switchResourceTab('foam')">🧽 سفنج</button>
+                <button class="tab-btn" onclick="switchResourceTab('fabric')">🧵 قماش</button>
+                <button class="tab-btn" onclick="switchResourceTab('hardware')">🔩 نواعم</button>
+            </div>
+            <form onsubmit="saveResource(event)">
+                <input type="hidden" id="resourceCategory" value="wood">
+                <input type="hidden" id="editResourceId">
+                <div class="group"><label>اسم الصنف / المادة</label><input type="text" id="resName" required placeholder="مثال: خشب زان / سفنج كثافة 36"></div>
+                <div class="group"><label>القياسات / المواصفات</label><input type="text" id="resDims" placeholder="مثال: سمك 5 سم / عرض 140 سم"></div>
+                <div class="group"><label>الكمية / عدد الأطقم أو القطع</label><input type="number" id="resQty" required placeholder="0"></div>
+                <div class="group"><label>ملاحظات إضافية</label><input type="text" id="resNote" placeholder="ملاحظات..."></div>
+                <div style="display: flex; align-items: flex-end; grid-column: 1/-1;"><button class="btn" id="resSubmitBtn">إضافة للموارد</button></div>
+            </form>
+            <table>
+                <thead><tr><th>القسم</th><th>اسم الصنف</th><th>القياسات</th><th>الكمية المتوفرة</th><th>ملاحظات</th><th>إجراء</th></tr></thead>
+                <tbody id="resourcesTable"></tbody>
+            </table>
+        </div>
+
+        <!-- قسم العدة والأجهزة -->
+        <div id="t-tools" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h2 style="margin:0; border:none; padding:0;">قسم العدة والأجهزة (مستقلة عن الأرباح والديون)</h2>
+                <div style="background: #e8f4f8; padding: 6px 12px; border-radius: 6px; font-weight: bold; color: var(--primary); font-size: 13px;">
+                    إجمالي قيمة العدة والأجهزة: <span id="totalToolsSum" style="color: var(--success);">0 ₺</span>
+                </div>
+            </div>
+            <form onsubmit="addTool(event)">
+                <input type="hidden" id="editToolId">
+                <div class="group"><label>اسم العدة / الجهاز</label><input type="text" id="toolName" required placeholder="مثال: دباسة هواء، منشار..."></div>
+                <div class="group"><label>التكلفة / السعر (ليرة)</label><input type="number" id="toolPrice" required placeholder="0"></div>
+                <div class="group"><label>ملاحظات</label><input type="text" id="toolNote" placeholder="ملاحظات..."></div>
+                <div style="display: flex; align-items: flex-end;"><button class="btn" id="toolSubmitBtn">تسجيل العدة</button></div>
+            </form>
+            <table><thead><tr><th>التاريخ</th><th>اسم العدة / الجهاز</th><th>السعر</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="toolsTable"></tbody></table>
+        </div>
+
         <!-- أجور العمال -->
         <div id="t-wages" class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
@@ -298,7 +313,6 @@
                 </div>
             </div>
             <form onsubmit="addWage(event)">
-                <input type="hidden" id="editWageId">
                 <div class="group"><label>اسم العامل / البيان</label><input type="text" id="wageTitle" required placeholder="أجر فلان"></div>
                 <div class="group"><label>المبلغ</label><input type="number" id="wageAmount" required placeholder="0"></div>
                 <div class="group"><label>طريقة الدفع</label>
@@ -306,12 +320,11 @@
                         <option value="كاش">كاش</option>
                         <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
                         <option value="كرت Tek Çekim 5%">كرت Tek Çekim (خصم 5%)</option>
-                        <option value="كرت Tek Çekim 0%">كرت Tek Çekim (بدون خصم)</option>
                     </select>
                 </div>
-                <div style="display: flex; align-items: flex-end;"><button class="btn" id="wageSubmitBtn">تسجيل الأجر</button></div>
+                <div style="display: flex; align-items: flex-end;"><button class="btn">تسجيل الأجر</button></div>
             </form>
-            <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="wagesTable"></tbody></table>
+            <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خسارة الكرت</th><th>إجراء</th></tr></thead><tbody id="wagesTable"></tbody></table>
         </div>
 
         <!-- المصاريف -->
@@ -330,24 +343,23 @@
                         <option value="كاش">كاش</option>
                         <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
                         <option value="كرت Tek Çekim 5%">كرت Tek Çekim (خصم 5%)</option>
-                        <option value="كرت Tek Çekim 0%">كرت Tek Çekim (بدون خصم)</option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;"><button class="btn">تسجيل المصروف</button></div>
             </form>
-            <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خصم الكرت</th><th>إجراء</th></tr></thead><tbody id="expensesTable"></tbody></table>
+            <table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الطريقة</th><th>خسارة الكرت</th><th>إجراء</th></tr></thead><tbody id="expensesTable"></tbody></table>
         </div>
 
         <!-- البحث الشامل -->
         <div id="t-search" class="section">
-            <h2>البحث الشامل</h2>
+            <h2>البحث الشامل (زبائن، موردين، طلبات)</h2>
             <form onsubmit="return false;">
-                <div class="group" style="grid-column: 1/-1;"><label>ابحث عن اسم، هاتف، أو تفاصيل الطلب</label><input type="text" id="globalSearchInput" oninput="performGlobalSearch()" placeholder="اكتب للبحث الفوري..."></div>
+                <div class="group" style="grid-column: 1/-1;"><label>ابحث عن أي اسم زبون، مورد، نوع طلب، أو قماش</label><input type="text" id="globalSearchInput" oninput="performGlobalSearch()" placeholder="اكتب للبحث الفوري..."></div>
             </form>
             <div id="searchResultsContainer"></div>
         </div>
 
-        <!-- الفلترة وسجل التعديلات -->
+        <!-- سجل التعديلات -->
         <div id="t-filter" class="section">
             <h2>سجل التعديلات والعمليات</h2>
             <table>
@@ -413,7 +425,7 @@
     <!-- نافذة تسليم الطلب -->
     <div id="deliverModal">
         <div class="invoice-print-box" style="width: 400px;">
-            <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--primary);">تسليم الطلب وإنشاء فاتورة للزبون</h3>
+            <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--primary);">تسليم الطلب وإنشاء فاتورة مستقلة للزبون</h3>
             <form id="deliverForm" onsubmit="confirmDelivery(event)">
                 <input type="hidden" id="deliverOrderId">
                 <p id="deliverInfoText" style="font-size: 13px; margin-bottom: 12px; color: #555; background: #f9f9f9; padding: 8px; border-radius: 4px;"></p>
@@ -423,7 +435,6 @@
                         <option value="كاش">كاش</option>
                         <option value="كرت تقسيط 10%">كرت تقسيط (خصم 10%)</option>
                         <option value="كرت Tek Çekim 5%">كرت Tek Çekim (خصم 5%)</option>
-                        <option value="كرت Tek Çekim 0%">كرت Tek Çekim (بدون خصم)</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
@@ -434,7 +445,7 @@
         </div>
     </div>
 
-    <!-- سكربتات الاتصال السحابي Firebase والهيكل الجديد (Subcollections) مع الترحيل التلقائي -->
+    <!-- سكربتات الاتصال السحابي وإدارة المستندات الفرعية والترحيل التلقائي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
@@ -455,7 +466,7 @@
         const dbCloud = getFirestore(app);
 
         let currentUser = null;
-        window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
+        window.appData = { customers: [], suppliers: [], expenses: [], wages: [], orders: [], tools: [], resources: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
 
         setPersistence(auth, browserLocalPersistence).catch(err => console.error(err));
 
@@ -468,185 +479,186 @@
             signOut(auth).then(() => location.reload());
         };
 
-        // دالة تحميل البيانات مع الترحيل التلقائي لضمان عدم ضياع أي بيانات قديمة
+        // دالة الترحيل الذكي للبيانات القديمة إلى بنية المستندات الفرعية المعزولة
         async function loadCloudData() {
             if (!currentUser) return;
             try {
                 const userDocRef = doc(dbCloud, "workshops", currentUser.uid);
                 const userDocSnap = await getDoc(userDocRef);
 
-                // --- سكريبت الترحيل الذكي للبيانات القديمة ---
                 if (userDocSnap.exists()) {
                     const data = userDocSnap.data();
-                    if (!data.migrated && (data.customers || data.suppliers || data.orders || data.expenses || data.wages || data.logs)) {
-                        console.log("جارٍ ترحيل البيانات القديمة إلى نظام المجموعات الفرعية (Subcollections)...");
+                    // إذا كان النظام القديم مخزناً داخل مصفوفة txs داخل الزبون، نقوم بترحيلها لمستندات فرعية مستقلة
+                    if (!data.migratedToSubcollectionsV2) {
+                        console.log("🔄 جاري الترحيل التلقائي للفواتير إلى مستندات فرعية مستقلة لكل فاتورة...");
                         
                         if (data.customers) {
                             for (let c of data.customers) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
-                            }
-                        }
-                        if (data.suppliers) {
-                            for (let s of data.suppliers) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), s);
-                            }
-                        }
-                        if (data.orders) {
-                            for (let o of data.orders) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(o.id)), o);
-                            }
-                        }
-                        if (data.expenses) {
-                            for (let ex of data.expenses) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(ex.id)), ex);
-                            }
-                        }
-                        if (data.wages) {
-                            for (let w of data.wages) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(w.id)), w);
-                            }
-                        }
-                        if (data.logs) {
-                            for (let l of data.logs) {
-                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "logs", String(l.id)), l);
+                                let custObj = { id: c.id, name: c.name, phone: c.phone };
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), custObj);
+                                if (c.txs && Array.isArray(c.txs)) {
+                                    for (let t of c.txs) {
+                                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id), "transactions", String(t.id)), t);
+                                    }
+                                }
                             }
                         }
 
-                        // حفظ إعدادات الفاتورة وتثبيت علامة أن الترحيل تم بنجاح
-                        await setDoc(userDocRef, {
-                            invoiceSettings: data.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" },
-                            migrated: true
-                        });
-                        console.log("تم ترحيل البيانات بنجاح تام!");
+                        if (data.suppliers) {
+                            for (let s of data.suppliers) {
+                                let suppObj = { id: s.id, name: s.name, phone: s.phone };
+                                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), suppObj);
+                                if (s.txs && Array.isArray(s.txs)) {
+                                    for (let t of s.txs) {
+                                        await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id), "transactions", String(t.id)), t);
+                                    }
+                                }
+                            }
+                        }
+
+                        await setDoc(userDocRef, { migratedToSubcollectionsV2: true }, { merge: true });
+                        console.log("✅ تمت عملية الترحيل وإنشاء المستندات المستقلة بنجاح تام!");
                     }
                 }
 
-                // قراءة البيانات من المجموعات الفرعية (Subcollections)
-                window.appData = { customers: [], suppliers: [], orders: [], expenses: [], wages: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
+                // جلب البيانات الأساسية من السحابة بنظام المستندات الفرعية
+                window.appData.invoiceSettings = (userDocSnap.exists() && userDocSnap.data().invoiceSettings) ? userDocSnap.data().invoiceSettings : { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
 
-                if (userDocSnap.exists() && userDocSnap.data().invoiceSettings) {
-                    window.appData.invoiceSettings = userDocSnap.data().invoiceSettings;
+                window.appData.customers = [];
+                window.appData.suppliers = [];
+                window.appData.orders = [];
+                window.appData.expenses = [];
+                window.appData.wages = [];
+                window.appData.tools = [];
+                window.appData.resources = [];
+                window.appData.logs = [];
+
+                const custSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers"));
+                for (let docSnap of custSnap.docs) {
+                    let cData = docSnap.data();
+                    cData.txs = [];
+                    const txSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers", docSnap.id, "transactions"));
+                    txSnap.forEach(tDoc => cData.txs.push(tDoc.data()));
+                    cData.txs.sort((a, b) => a.id - b.id);
+                    window.appData.customers.push(cData);
                 }
 
-                const [custSnap, suppSnap, orderSnap, expSnap, wageSnap, logSnap] = await Promise.all([
-                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "customers")),
-                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers")),
+                const suppSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers"));
+                for (let docSnap of suppSnap.docs) {
+                    let sData = docSnap.data();
+                    sData.txs = [];
+                    const txSnap = await getDocs(collection(dbCloud, "workshops", currentUser.uid, "suppliers", docSnap.id, "transactions"));
+                    txSnap.forEach(tDoc => sData.txs.push(tDoc.data()));
+                    sData.txs.sort((a, b) => a.id - b.id);
+                    window.appData.suppliers.push(sData);
+                }
+
+                const [orderSnap, expSnap, wageSnap, toolSnap, resSnap, logSnap] = await Promise.all([
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "orders")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "expenses")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "wages")),
+                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "tools")),
+                    getDocs(collection(dbCloud, "workshops", currentUser.uid, "resources")),
                     getDocs(collection(dbCloud, "workshops", currentUser.uid, "logs"))
                 ]);
 
-                custSnap.forEach(d => window.appData.customers.push(d.data()));
-                suppSnap.forEach(d => window.appData.suppliers.push(d.data()));
                 orderSnap.forEach(d => window.appData.orders.push(d.data()));
                 expSnap.forEach(d => window.appData.expenses.push(d.data()));
                 wageSnap.forEach(d => window.appData.wages.push(d.data()));
+                toolSnap.forEach(d => window.appData.tools.push(d.data()));
+                resSnap.forEach(d => window.appData.resources.push(d.data()));
                 logSnap.forEach(d => window.appData.logs.push(d.data()));
 
-                checkMissingStructures();
                 refreshUI();
+                checkUpcomingOrdersForNotifications();
 
             } catch (e) {
-                console.error("خطأ في الاتصال، جاري استخدام الذاكرة المحلية:", e);
-                window.appData = JSON.parse(localStorage.getItem('workshop_db_v20')) || { customers: [], suppliers: [], expenses: [], wages: [], orders: [], logs: [], invoiceSettings: { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" } };
-                checkMissingStructures();
+                console.error("خطأ في الاتصال بالسحابة، جاري استخدام الذاكرة المحلية:", e);
+                window.appData = JSON.parse(localStorage.getItem('workshop_db_v21')) || window.appData;
                 refreshUI();
             }
         }
 
-        // دوال التخزين السحابي المحسنة (تحديث العنصر المستهدف فقط دون رفع كامل الملف)
+        // دوال الحفظ الفردي المحدثة
         window.cloudSave = {
-            customer: async (c) => {
+            customerInfo: async (c) => {
                 if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), c);
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(c.id)), { id: c.id, name: c.name, phone: c.phone });
             },
-            deleteCustomer: async (id) => {
+            customerTx: async (cid, t) => {
+                if (!currentUser) return;
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cid), "transactions", String(t.id)), t);
+            },
+            deleteCustomerTx: async (cid, tid) => {
+                if (!currentUser) return;
+                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(cid), "transactions", String(tid)));
+            },
+            deleteCustomerDoc: async (id) => {
                 if (!currentUser) return;
                 await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "customers", String(id)));
             },
-            supplier: async (s) => {
+            supplierInfo: async (s) => {
                 if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), s);
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(s.id)), { id: s.id, name: s.name, phone: s.phone });
             },
-            deleteSupplier: async (id) => {
+            supplierTx: async (sid, t) => {
+                if (!currentUser) return;
+                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sid), "transactions", String(t.id)), t);
+            },
+            deleteSupplierTx: async (sid, tid) => {
+                if (!currentUser) return;
+                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(sid), "transactions", String(tid)));
+            },
+            deleteSupplierDoc: async (id) => {
                 if (!currentUser) return;
                 await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "suppliers", String(id)));
             },
-            order: async (o) => {
-                if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(o.id)), o);
-            },
-            deleteOrder: async (id) => {
-                if (!currentUser) return;
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(id)));
-            },
-            wage: async (w) => {
-                if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(w.id)), w);
-            },
-            deleteWage: async (id) => {
-                if (!currentUser) return;
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(id)));
-            },
-            expense: async (ex) => {
-                if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(ex.id)), ex);
-            },
-            deleteExpense: async (id) => {
-                if (!currentUser) return;
-                await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(id)));
-            },
-            log: async (l) => {
-                if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid, "logs", String(l.id)), l);
-            },
-            settings: async () => {
-                if (!currentUser) return;
-                await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings, migrated: true }, { merge: true });
-            }
+            order: async (o) => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(o.id)), o); },
+            deleteOrder: async (id) => { if (currentUser) await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "orders", String(id))); },
+            wage: async (w) => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(w.id)), w); },
+            deleteWage: async (id) => { if (currentUser) await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "wages", String(id))); },
+            expense: async (ex) => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(ex.id)), ex); },
+            deleteExpense: async (id) => { if (currentUser) await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "expenses", String(id))); },
+            tool: async (to) => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid, "tools", String(to.id)), to); },
+            deleteTool: async (id) => { if (currentUser) await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "tools", String(id))); },
+            resource: async (r) => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid, "resources", String(r.id)), r); },
+            deleteResource: async (id) => { if (currentUser) await deleteDoc(doc(dbCloud, "workshops", currentUser.uid, "resources", String(id))); },
+            log: async (l) => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid, "logs", String(l.id)), l); },
+            settings: async () => { if (currentUser) await setDoc(doc(dbCloud, "workshops", currentUser.uid), { invoiceSettings: window.appData.invoiceSettings, migratedToSubcollectionsV2: true }, { merge: true }); }
         };
 
         window.resetCloudData = async function() {
-            let enteredPin = prompt("⚠️ تنبيه خطير: سيتم حذف جميع البيانات نهائياً!\n\nأدخل رمز الـ PIN السري للتأكيد:");
-            if (enteredPin !== "1234") { alert("❌ رمز الـ PIN غير صحيح!"); return; }
-            if(confirm("هل أنت متأكد تماماً؟")) {
+            let pin = prompt("⚠️ تنبيه: سيتم حذف البيانات وإعادة التعيين!\nأدخل رمز الـ PIN (1234):");
+            if (pin !== "1234") { alert("❌ رمز غير صحيح!"); return; }
+            if (confirm("هل أنت متأكد تماماً؟")) {
                 localStorage.clear();
-                alert("تم تصفير البيانات بنجاح.");
+                alert("تم التصفير بنجاح.");
                 location.reload();
             }
         };
 
         window.exportBackup = function() {
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appData, null, 2));
-            let downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `workshop_backup_${getDate()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            let a = document.createElement('a');
+            a.href = dataStr;
+            a.download = `workshop_backup_${getDate()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         };
 
         window.importBackup = function(event) {
             let file = event.target.files[0];
             if (!file) return;
             let reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 try {
                     let imported = JSON.parse(e.target.result);
                     if (imported && imported.customers) {
-                        if (confirm("⚠️ هل تريد استبدال البيانات الحالية؟")) {
-                            window.appData = imported;
-                            // رفع النسخة المستعادة للـ Subcollections
-                            for(let c of window.appData.customers) await window.cloudSave.customer(c);
-                            for(let s of window.appData.suppliers) await window.cloudSave.supplier(s);
-                            for(let o of window.appData.orders) await window.cloudSave.order(o);
-                            for(let w of window.appData.wages) await window.cloudSave.wage(w);
-                            for(let ex of window.appData.expenses) await window.cloudSave.expense(ex);
-                            await window.cloudSave.settings();
-                            alert("✅ تمت الاستعادة بنجاح!");
-                            location.reload();
-                        }
+                        window.appData = imported;
+                        save();
+                        alert("✅ تمت الاستعادة بنجاح! يرجى إعادة تحميل الصفحة.");
+                        location.reload();
                     }
                 } catch(err) { alert("❌ ملف غير صالح!"); }
             };
@@ -669,43 +681,21 @@
             }
         });
 
-        function checkMissingStructures() {
-            if(!window.appData.orders) window.appData.orders = [];
-            if(!window.appData.wages) window.appData.wages = [];
-            if(!window.appData.expenses) window.appData.expenses = [];
-            if(!window.appData.logs) window.appData.logs = [];
-            if(!window.appData.invoiceSettings) window.appData.invoiceSettings = { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
-        }
-
-        function refreshUI() {
-            renderCustomers();
-            renderSuppliers();
-            renderOrders();
-            renderWages();
-            renderExpenses();
-            renderLogs();
-            loadInvoiceSettingsToForm();
-            updateDash();
-        }
         window.save = function() {
-            localStorage.setItem('workshop_db_v20', JSON.stringify(window.appData));
+            localStorage.setItem('workshop_db_v21', JSON.stringify(window.appData));
             refreshUI();
         }
     </script>
 
-    <!-- منطق العمليات والمتابعة -->
+    <!-- منطق وتفاعلات النظام المطوّر -->
     <script>
         function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('show'); }
-        window.onclick = function(event) {
-            if (!event.target.matches('.menu-btn')) {
-                let dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (let i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
-            }
-        }
+        window.onclick = function(e) { if (!e.target.matches('.menu-btn')) document.getElementById('dropdownMenu').classList.remove('show'); }
         function switchSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 't-orders') { populateOrderCustomerSelect(); document.getElementById('orderDueDate').value = getDate(); }
+            if(id === 't-resources') { renderResources(); }
             updateDash();
         }
         function getDate() { return new Date().toISOString().split('T')[0]; }
@@ -713,12 +703,12 @@
             let now = new Date();
             return now.toISOString().split('T')[0] + ' ' + now.toTimeString().split(' ')[0];
         }
-        function addLog(actionType, details) {
+        function addLog(type, details) {
             if(!window.appData.logs) window.appData.logs = [];
-            let newLog = { id: Date.now(), time: getDateTimeNow(), type: actionType, details: details };
-            window.appData.logs.unshift(newLog);
+            let l = { id: Date.now(), time: getDateTimeNow(), type: type, details: details };
+            window.appData.logs.unshift(l);
             if(window.appData.logs.length > 100) window.appData.logs.pop();
-            if(window.cloudSave && window.cloudSave.log) window.cloudSave.log(newLog);
+            if(window.cloudSave) window.cloudSave.log(l);
         }
         function renderLogs() {
             let html = '';
@@ -746,20 +736,48 @@
                 phone: document.getElementById('setInvPhone').value,
                 address: document.getElementById('setInvAddress').value
             };
-            addLog("تعديل إعدادات", "تم تحديث إعدادات الفاتورة");
+            addLog("تعديل إعدادات", "تحديث إعدادات الفاتورة");
             if(window.cloudSave) window.cloudSave.settings();
-            save();
-            alert("✅ تم الحفظ بنجاح!");
+            save(); alert("✅ تم الحفظ!");
         }
 
-        // --- الزبائن ---
-        function addCustomer(e) { 
-            e.preventDefault(); 
-            let cust = { id: Date.now(), name: document.getElementById('newCustName').value, phone: document.getElementById('newCustPhone').value || '-', txs: [] };
-            window.appData.customers.push(cust); 
-            addLog("إضافة زبون", `تم إضافة الزبون: ${cust.name}`);
-            if(window.cloudSave) window.cloudSave.customer(cust);
-            save(); e.target.reset(); 
+        // --- الإشعارات الحقيقية ---
+        window.requestRealNotifications = function() {
+            if (!("Notification" in window)) {
+                alert("متصفحك لا يدعم الإشعارات الحقيقية.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("✅ تم تفعيل الإشعارات بنجاح! ستبلغك المنظومة بالمواعيد القادمة.");
+                    new Notification("ورشة الأثاث", { body: "تم تفعيل نظام التنبيهات بنجاح.", icon: "icon.png" });
+                } else {
+                    alert("⚠️ تم رفض إذن الإشعارات من المتصفح.");
+                }
+            });
+        }
+
+        function checkUpcomingOrdersForNotifications() {
+            if (!("Notification" in window) || Notification.permission !== "granted") return;
+            let today = getDate();
+            (window.appData.orders || []).forEach(o => {
+                if (o.status !== 'مكتمل' && o.dueDate === today) {
+                    new Notification("تنبيه موعد تسليم طلب!", {
+                        body: `الزبون: ${o.customerName} - الطقم: ${o.type} موعد تسليمه اليوم!`,
+                        icon: "icon.png"
+                    });
+                }
+            });
+        }
+
+        // --- الزبائن ومستندات الفواتير المعزولة ---
+        window.addCustomer = function(e) {
+            e.preventDefault();
+            let c = { id: Date.now(), name: document.getElementById('newCustName').value, phone: document.getElementById('newCustPhone').value || '-', txs: [] };
+            window.appData.customers.push(c);
+            addLog("إضافة زبون", `تم إضافة الزبون: ${c.name}`);
+            if(window.cloudSave) window.cloudSave.customerInfo(c);
+            save(); e.target.reset();
         }
         window.renderCustomers = function() {
             let html = '';
@@ -770,12 +788,12 @@
             });
             document.getElementById('customersTable').innerHTML = html;
         }
-        window.delCust = function(id) { 
+        window.delCust = function(id) {
             let c = window.appData.customers.find(x => x.id === id);
-            if(c) addLog("حذف زبون", `تم حذف الزبون: ${c.name}`);
-            window.appData.customers = window.appData.customers.filter(c => c.id !== id); 
-            if(window.cloudSave) window.cloudSave.deleteCustomer(id);
-            save(); 
+            if(c) addLog("حذف زبون", `حذف الزبون: ${c.name}`);
+            window.appData.customers = window.appData.customers.filter(x => x.id !== id);
+            if(window.cloudSave) window.cloudSave.deleteCustomerDoc(id);
+            save();
         }
         window.openCust = function(id) {
             let c = window.appData.customers.find(x => x.id === id);
@@ -805,16 +823,18 @@
             let paid = parseFloat(document.getElementById('billCustPaid').value) || 0;
             let desc = document.getElementById('billCustDesc').value;
             let method = document.getElementById('billCustMethod').value;
-            
+            let txId = editId ? parseInt(editId) : Date.now();
+            let tx = { id: txId, date: getDate(), desc: desc, total: total, paid: paid, method: method };
+
             if(editId) {
-                let tx = c.txs.find(t => t.id == editId);
-                if(tx) { tx.desc = desc; tx.total = total; tx.paid = paid; tx.method = method; }
-                addLog("تعديل معاملة زبون", `تم تعديل معاملة للزبون ${c.name}`);
+                let idx = c.txs.findIndex(t => t.id == editId);
+                if(idx !== -1) c.txs[idx] = tx;
+                addLog("تعديل فاتورة زبون", `تعديل فاتورة مستقلة للزبون ${c.name}`);
             } else {
-                c.txs.push({ id: Date.now(), date: getDate(), desc: desc, total: total, paid: paid, method: method, cardLoss: 0 });
-                addLog("إضافة معاملة زبون", `معاملة جديدة للزبون ${c.name}`);
+                c.txs.push(tx);
+                addLog("إضافة فاتورة زبون", `إنشاء مستند فاتورة مستقل للزبون ${c.name}`);
             }
-            if(window.cloudSave) window.cloudSave.customer(c);
+            if(window.cloudSave) window.cloudSave.customerTx(c.id, tx);
             save(); openCust(c.id);
         }
         window.editCustTx = function(cid, tid) {
@@ -828,8 +848,8 @@
             document.getElementById('billCustTotal').value = t.total;
             document.getElementById('billCustPaid').value = t.paid;
             document.getElementById('billCustMethod').value = t.method;
-            document.getElementById('custFormTitle').innerText = 'تعديل المعاملة';
-            document.getElementById('custSubmitBtn').innerText = 'تحديث';
+            document.getElementById('custFormTitle').innerText = 'تعديل الفاتورة المستقلة';
+            document.getElementById('custSubmitBtn').innerText = 'تحديث الفاتورة';
             document.getElementById('cancelCustEditBtn').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -838,8 +858,8 @@
             document.getElementById('editCustTxId').value = '';
             document.getElementById('custTxType').value = 'bill';
             toggleCustFormMode();
-            document.getElementById('custFormTitle').innerText = '1. تسجيل فاتورة بضاعة جديدة للزبون';
-            document.getElementById('custSubmitBtn').innerText = 'حفظ الفاتورة';
+            document.getElementById('custFormTitle').innerText = 'تسجيل فاتورة أو حركة مستقلة للزبون';
+            document.getElementById('custSubmitBtn').innerText = 'حفظ الفاتورة بمستند مستقل';
             document.getElementById('cancelCustEditBtn').style.display = 'none';
         }
         function renderCustTxs(c) {
@@ -851,22 +871,22 @@
             });
             document.getElementById('customerTxTable').innerHTML = html;
         }
-        window.delCustTx = function(cid, tid) { 
-            let c = window.appData.customers.find(x => x.id === cid); 
-            c.txs = c.txs.filter(t => t.id !== tid); 
-            addLog("حذف معاملة زبون", `حذف معاملة من حساب ${c.name}`);
-            if(window.cloudSave) window.cloudSave.customer(c);
-            save(); openCust(cid); 
+        window.delCustTx = function(cid, tid) {
+            let c = window.appData.customers.find(x => x.id === cid);
+            c.txs = c.txs.filter(t => t.id !== tid);
+            addLog("حذف فاتورة زبون", `حذف مستند فاتورة من حساب ${c.name}`);
+            if(window.cloudSave) window.cloudSave.deleteCustomerTx(cid, tid);
+            save(); openCust(cid);
         }
 
-        // --- الموردين ---
-        function addSupplier(e) { 
-            e.preventDefault(); 
+        // --- الموردين ومستندات الفواتير المعزولة ---
+        window.addSupplier = function(e) {
+            e.preventDefault();
             let s = { id: Date.now(), name: document.getElementById('newSuppName').value, phone: document.getElementById('newSuppPhone').value || '-', txs: [] };
-            window.appData.suppliers.push(s); 
+            window.appData.suppliers.push(s);
             addLog("إضافة مورد", `تم إضافة المورد: ${s.name}`);
-            if(window.cloudSave) window.cloudSave.supplier(s);
-            save(); e.target.reset(); 
+            if(window.cloudSave) window.cloudSave.supplierInfo(s);
+            save(); e.target.reset();
         }
         window.renderSuppliers = function() {
             let html = '';
@@ -877,12 +897,12 @@
             });
             document.getElementById('suppliersTable').innerHTML = html;
         }
-        window.delSupp = function(id) { 
+        window.delSupp = function(id) {
             let s = window.appData.suppliers.find(x => x.id === id);
-            if(s) addLog("حذف مورد", `تم حذف المورد: ${s.name}`);
-            window.appData.suppliers = window.appData.suppliers.filter(s => s.id !== id); 
-            if(window.cloudSave) window.cloudSave.deleteSupplier(id);
-            save(); 
+            if(s) addLog("حذف مورد", `حذف المورد: ${s.name}`);
+            window.appData.suppliers = window.appData.suppliers.filter(x => x.id !== id);
+            if(window.cloudSave) window.cloudSave.deleteSupplierDoc(id);
+            save();
         }
         window.openSupp = function(id) {
             let s = window.appData.suppliers.find(x => x.id === id);
@@ -922,15 +942,18 @@
                 if(billType === 'شاملة_كرت_10') supplierTotalNet = rawTotal * 0.90;
                 else if(billType === 'شاملة_كرت_5') supplierTotalNet = rawTotal * 0.95;
             }
+            let txId = editId ? parseInt(editId) : Date.now();
+            let tx = { id: txId, date: getDate(), desc: desc, supplierTotalNet: supplierTotalNet, grossPaid: grossPaid, supplierPaidNet: supplierPaidNet, method: method, cardLoss: paymentCardLoss };
+
             if(editId) {
-                let tx = s.txs.find(t => t.id == editId);
-                if(tx) { tx.desc = desc; tx.supplierTotalNet = supplierTotalNet; tx.grossPaid = grossPaid; tx.supplierPaidNet = supplierPaidNet; tx.method = method; tx.cardLoss = paymentCardLoss; }
-                addLog("تعديل معاملة مورد", `تعديل معاملة للمورد ${s.name}`);
+                let idx = s.txs.findIndex(t => t.id == editId);
+                if(idx !== -1) s.txs[idx] = tx;
+                addLog("تعديل فاتورة مورد", `تعديل مستند فاتورة للمورد ${s.name}`);
             } else {
-                s.txs.push({ id: Date.now(), date: getDate(), desc: desc, supplierTotalNet: supplierTotalNet, grossPaid: grossPaid, supplierPaidNet: supplierPaidNet, method: method, cardLoss: paymentCardLoss });
-                addLog("إضافة معاملة مورد", `معاملة جديدة للمورد ${s.name}`);
+                s.txs.push(tx);
+                addLog("إضافة فاتورة مورد", `إنشاء مستند فاتورة مستقل للمورد ${s.name}`);
             }
-            if(window.cloudSave) window.cloudSave.supplier(s);
+            if(window.cloudSave) window.cloudSave.supplierTx(s.id, tx);
             save(); openSupp(s.id);
         }
         window.editSuppTx = function(sid, tid) {
@@ -944,8 +967,8 @@
             document.getElementById('billSuppTotal').value = t.supplierTotalNet;
             document.getElementById('billSuppPaid').value = t.grossPaid;
             document.getElementById('billSuppMethod').value = t.method;
-            document.getElementById('suppFormTitle').innerText = 'تعديل المعاملة';
-            document.getElementById('suppSubmitBtn').innerText = 'تحديث';
+            document.getElementById('suppFormTitle').innerText = 'تعديل الفاتورة المستقلة';
+            document.getElementById('suppSubmitBtn').innerText = 'تحديث الفاتورة';
             document.getElementById('cancelSuppEditBtn').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -954,8 +977,8 @@
             document.getElementById('editSuppTxId').value = '';
             document.getElementById('suppTxType').value = 'bill';
             toggleSuppFormMode();
-            document.getElementById('suppFormTitle').innerText = '1. تسجيل فاتورة بضاعة جديدة للمورد';
-            document.getElementById('suppSubmitBtn').innerText = 'حفظ الفاتورة';
+            document.getElementById('suppFormTitle').innerText = 'تسجيل فاتورة مستقلة للمورد';
+            document.getElementById('suppSubmitBtn').innerText = 'حفظ بمستند مستقل';
             document.getElementById('cancelSuppEditBtn').style.display = 'none';
         }
         function renderSuppTxs(s) {
@@ -968,12 +991,12 @@
             });
             document.getElementById('supplierTxTable').innerHTML = html;
         }
-        window.delSuppTx = function(sid, tid) { 
-            let s = window.appData.suppliers.find(x => x.id === sid); 
-            s.txs = s.txs.filter(t => t.id !== tid); 
-            addLog("حذف معاملة مورد", `حذف معاملة من ${s.name}`);
-            if(window.cloudSave) window.cloudSave.supplier(s);
-            save(); openSupp(sid); 
+        window.delSuppTx = function(sid, tid) {
+            let s = window.appData.suppliers.find(x => x.id === sid);
+            s.txs = s.txs.filter(t => t.id !== tid);
+            addLog("حذف فاتورة مورد", `حذف مستند فاتورة من ${s.name}`);
+            if(window.cloudSave) window.cloudSave.deleteSupplierTx(sid, tid);
+            save(); openSupp(sid);
         }
 
         // --- الطلبات ---
@@ -990,7 +1013,6 @@
             let customer = window.appData.customers.find(c => c.id === custId);
             if(!customer) return;
             let editId = document.getElementById('editOrderId').value;
-            
             if(!window.appData.orders) window.appData.orders = [];
             let order;
             if(editId) {
@@ -1060,12 +1082,12 @@
             });
             document.getElementById('ordersTable').innerHTML = html;
         }
-        window.delOrder = function(id) { 
+        window.delOrder = function(id) {
             let o = window.appData.orders.find(x => x.id === id);
             if(o) addLog("حذف طلب", `حذف طلب للزبون ${o.customerName}`);
-            window.appData.orders = window.appData.orders.filter(o => o.id !== id); 
+            window.appData.orders = window.appData.orders.filter(x => x.id !== id);
             if(window.cloudSave) window.cloudSave.deleteOrder(id);
-            save(); 
+            save();
         }
 
         window.openDeliverModal = function(orderId) {
@@ -1088,17 +1110,127 @@
             if(!customer) return;
             order.status = 'مكتمل';
             if(!customer.txs) customer.txs = [];
-            customer.txs.push({ id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method, cardLoss: 0 });
-            addLog("تسليم طلب", `تسليم طلب للزبون ${customer.name}`);
+            let tx = { id: Date.now(), date: getDate(), desc: `طقم: ${order.type} | قماش: ${order.fabric} | أرجل: ${order.legs}`, total: order.price, paid: paidAmount, method: method };
+            customer.txs.push(tx);
+            addLog("تسليم طلب", `تسليم طلب وإنشاء مستند فاتورة للزبون ${customer.name}`);
             if(window.cloudSave) {
                 window.cloudSave.order(order);
-                window.cloudSave.customer(customer);
+                window.cloudSave.customerTx(customer.id, tx);
             }
-            save(); closeDeliverModal(); alert("تم تسليم الطلب وتحويله لفاتورة بنجاح!");
+            save(); closeDeliverModal(); alert("تم تسليم الطلب وإنشاء مستند الفاتورة للزبون بنجاح!");
+        }
+
+        // --- قسم الموارد (خشب، سفنج، قماش، نواعم) ---
+        window.switchResourceTab = function(category) {
+            document.querySelectorAll('#t-resources .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('resourceCategory').value = category;
+        }
+        window.saveResource = function(e) {
+            e.preventDefault();
+            let cat = document.getElementById('resourceCategory').value;
+            let editId = document.getElementById('editResourceId').value;
+            let resObj = {
+                id: editId ? parseInt(editId) : Date.now(),
+                category: cat,
+                name: document.getElementById('resName').value,
+                dims: document.getElementById('resDims').value || '-',
+                qty: parseFloat(document.getElementById('resQty').value) || 0,
+                note: document.getElementById('resNote').value || '-'
+            };
+            if(!window.appData.resources) window.appData.resources = [];
+            if(editId) {
+                let idx = window.appData.resources.findIndex(r => r.id == editId);
+                if(idx !== -1) window.appData.resources[idx] = resObj;
+                addLog("تعديل مورد", `تعديل مادة مخزنية: ${resObj.name}`);
+            } else {
+                window.appData.resources.push(resObj);
+                addLog("إضافة مورد", `إضافة مادة مخزنية جديدة: ${resObj.name}`);
+            }
+            if(window.cloudSave) window.cloudSave.resource(resObj);
+            document.getElementById('editResourceId').value = '';
+            e.target.reset();
+            save();
+        }
+        window.renderResources = function() {
+            let html = '';
+            const catNames = { wood: '🪵 خشب', foam: '🧽 سفنج', fabric: '🧵 قماش', hardware: '🔩 نواعم' };
+            (window.appData.resources || []).forEach(r => {
+                html += `<tr><td><span class="badge" style="background:var(--secondary);">${catNames[r.category] || r.category}</span></td><td><b>${r.name}</b></td><td>${r.dims}</td><td>${r.qty}</td><td>${r.note}</td><td><button class="btn-edit" onclick="editResource(${r.id})">تعديل</button> <button class="btn btn-danger" onclick="delResource(${r.id})">حذف</button></td></tr>`;
+            });
+            document.getElementById('resourcesTable').innerHTML = html;
+        }
+        window.editResource = function(id) {
+            let r = window.appData.resources.find(x => x.id === id);
+            if(!r) return;
+            document.getElementById('editResourceId').value = r.id;
+            document.getElementById('resourceCategory').value = r.category;
+            document.getElementById('resName').value = r.name;
+            document.getElementById('resDims').value = r.dims;
+            document.getElementById('resQty').value = r.qty;
+            document.getElementById('resNote').value = r.note;
+            document.getElementById('resSubmitBtn').innerText = 'تحديث المادة';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.delResource = function(id) {
+            window.appData.resources = window.appData.resources.filter(x => x.id !== id);
+            if(window.cloudSave) window.cloudSave.deleteResource(id);
+            save();
+        }
+
+        // --- قسم العدة والأجهزة (مستقل عن الأرباح والمصاريف) ---
+        window.addTool = function(e) {
+            e.preventDefault();
+            let editId = document.getElementById('editToolId').value;
+            let tool = {
+                id: editId ? parseInt(editId) : Date.now(),
+                date: getDate(),
+                name: document.getElementById('toolName').value,
+                price: parseFloat(document.getElementById('toolPrice').value) || 0,
+                note: document.getElementById('toolNote').value || '-'
+            };
+            if(!window.appData.tools) window.appData.tools = [];
+            if(editId) {
+                let idx = window.appData.tools.findIndex(t => t.id == editId);
+                if(idx !== -1) window.appData.tools[idx] = tool;
+                addLog("تعديل عدة", `تعديل عدة/جهاز: ${tool.name}`);
+            } else {
+                window.appData.tools.push(tool);
+                addLog("شراء عدة", `شراء عدة/جهاز جديد: ${tool.name}`);
+            }
+            if(window.cloudSave) window.cloudSave.tool(tool);
+            document.getElementById('editToolId').value = '';
+            e.target.reset();
+            document.getElementById('toolSubmitBtn').innerText = 'تسجيل العدة';
+            save();
+        }
+        window.renderTools = function() {
+            let html = '', totalTools = 0;
+            (window.appData.tools || []).forEach(t => {
+                totalTools += t.price;
+                html += `<tr><td>${t.date}</td><td><b>${t.name}</b></td><td>${t.price.toLocaleString()} ₺</td><td>${t.note}</td><td><button class="btn-edit" onclick="editTool(${t.id})">تعديل</button> <button class="btn btn-danger" onclick="delTool(${t.id})">حذف</button></td></tr>`;
+            });
+            document.getElementById('toolsTable').innerHTML = html;
+            document.getElementById('totalToolsSum').innerText = totalTools.toLocaleString() + ' ₺';
+        }
+        window.editTool = function(id) {
+            let t = window.appData.tools.find(x => x.id === id);
+            if(!t) return;
+            document.getElementById('editToolId').value = t.id;
+            document.getElementById('toolName').value = t.name;
+            document.getElementById('toolPrice').value = t.price;
+            document.getElementById('toolNote').value = t.note;
+            document.getElementById('toolSubmitBtn').innerText = 'تحديث العدة';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.delTool = function(id) {
+            window.appData.tools = window.appData.tools.filter(x => x.id !== id);
+            if(window.cloudSave) window.cloudSave.deleteTool(id);
+            save();
         }
 
         // --- أجور العمال ---
-        function addWage(e) {
+        window.addWage = function(e) {
             e.preventDefault();
             let amount = parseFloat(document.getElementById('wageAmount').value);
             let method = document.getElementById('wageMethod').value;
@@ -1119,14 +1251,14 @@
             document.getElementById('wagesTable').innerHTML = html;
             document.getElementById('totalWagesSum').innerText = totalWages.toLocaleString() + ' ₺';
         }
-        window.delWage = function(id) { 
-            window.appData.wages = window.appData.wages.filter(w => w.id !== id); 
+        window.delWage = function(id) {
+            window.appData.wages = window.appData.wages.filter(w => w.id !== id);
             if(window.cloudSave) window.cloudSave.deleteWage(id);
-            save(); 
+            save();
         }
 
         // --- المصاريف ---
-        function addExpense(e) {
+        window.addExpense = function(e) {
             e.preventDefault();
             let amount = parseFloat(document.getElementById('expAmount').value);
             let method = document.getElementById('expMethod').value;
@@ -1147,28 +1279,44 @@
             document.getElementById('expensesTable').innerHTML = html;
             document.getElementById('totalExpensesSum').innerText = totalExp.toLocaleString() + ' ₺';
         }
-        window.delExp = function(id) { 
-            window.appData.expenses = window.appData.expenses.filter(e => e.id !== id); 
+        window.delExp = function(id) {
+            window.appData.expenses = window.appData.expenses.filter(e => e.id !== id);
             if(window.cloudSave) window.cloudSave.deleteExpense(id);
-            save(); 
+            save();
         }
 
-        // --- البحث الشامل ---
+        // --- البحث الشامل لكل شيء ---
         window.performGlobalSearch = function() {
             let query = document.getElementById('globalSearchInput').value.trim().toLowerCase();
             let container = document.getElementById('searchResultsContainer');
             if(!query) { container.innerHTML = '<p style="color:#777; text-align:center; padding:15px;">اكتب كلمة للبحث...</p>'; return; }
             let resultsHtml = '';
-            let matchedCusts = (window.appData.customers || []).filter(c => c.name.toLowerCase().includes(query));
+
+            let matchedCusts = (window.appData.customers || []).filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
             if(matchedCusts.length > 0) {
-                resultsHtml += `<h3>الزبائن:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجراء</th></tr></thead><tbody>`;
-                matchedCusts.forEach(c => resultsHtml += `<tr><td><b>${c.name}</b></td><td>${c.phone}</td><td><button class="btn" onclick="switchSection('t-sales'); openCust(${c.id});">فتح</button></td></tr>`);
+                resultsHtml += `<h3>الزبائن المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجراء</th></tr></thead><tbody>`;
+                matchedCusts.forEach(c => resultsHtml += `<tr><td><b>${c.name}</b></td><td>${c.phone}</td><td><button class="btn" onclick="switchSection('t-sales'); openCust(${c.id});">فتح الحساب</button></td></tr>`);
+                resultsHtml += `</tbody></table><br>`;
+            }
+
+            let matchedSupps = (window.appData.suppliers || []).filter(s => s.name.toLowerCase().includes(query) || s.phone.includes(query));
+            if(matchedSupps.length > 0) {
+                resultsHtml += `<h3>الموردين المطابقين:</h3><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>إجراء</th></tr></thead><tbody>`;
+                matchedSupps.forEach(s => resultsHtml += `<tr><td><b>${s.name}</b></td><td>${s.phone}</td><td><button class="btn" onclick="switchSection('t-costs'); openSupp(${s.id});">فتح الحساب</button></td></tr>`);
+                resultsHtml += `</tbody></table><br>`;
+            }
+
+            let matchedOrders = (window.appData.orders || []).filter(o => o.customerName.toLowerCase().includes(query) || o.type.toLowerCase().includes(query) || o.fabric.toLowerCase().includes(query) || o.legs.toLowerCase().includes(query));
+            if(matchedOrders.length > 0) {
+                resultsHtml += `<h3>الطلبات المطابقة (Siparişler):</h3><table><thead><tr><th>التاريخ</th><th>الزبون</th><th>الطقم</th><th>القماش</th><th>الحالة</th></tr></thead><tbody>`;
+                matchedOrders.forEach(o => resultsHtml += `<tr><td>${o.date}</td><td><b>${o.customerName}</b></td><td>${o.type}</td><td>${o.fabric}</td><td>${o.status}</td></tr>`);
                 resultsHtml += `</tbody></table>`;
             }
-            container.innerHTML = resultsHtml || '<p style="color:var(--danger); text-align:center;">لا توجد نتائج مطابقة.</p>';
+
+            container.innerHTML = resultsHtml || '<p style="color:var(--danger); text-align:center;">لا توجد نتائج مطابقة لبحثك.</p>';
         }
 
-        // --- طباعة الفاتورة ومشاركة PDF عبر واتساب ---
+        // --- طباعة الفاتورة ومشاركة PDF ---
         let lastPrintedInvoiceData = {};
         window.printSingleTx = function(name, date, desc, total, paid, method, rem) {
             let invSet = window.appData.invoiceSettings || { title: "ورشة الأثاث والتنجيد", phone: "+905000000000", address: "تركيا" };
@@ -1191,7 +1339,6 @@
         }
         window.closePrintModal = function() { document.getElementById('printModal').style.display = 'none'; }
 
-        // دالة مشاركة الفاتورة كـ PDF عبر واتساب بنفس هيئة الطباعة تماماً
         window.shareInvoiceWhatsAppPdf = async function() {
             let d = lastPrintedInvoiceData;
             if(!d.name) { alert("لا توجد بيانات فاتورة!"); return; }
@@ -1207,11 +1354,7 @@
                 let pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
                 let file = new File([pdfBlob], `Invoice_${d.name}.pdf`, { type: 'application/pdf' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'فاتورة الورشة',
-                        text: `مرحباً ${d.name}، تفضل فاتورتك بصيغة PDF.`
-                    });
+                    await navigator.share({ files: [file], title: 'فاتورة الورشة', text: `مرحباً ${d.name}، تفضل فاتورتك بصيغة PDF.` });
                 } else {
                     let downloadUrl = URL.createObjectURL(pdfBlob);
                     let a = document.createElement('a');
@@ -1220,15 +1363,12 @@
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
-                    alert("⚠️ المتصفح لا يدعم المشاركة المباشرة للملفات. تم تحميل ملف الـ PDF على جهازك لإرفاقه يدوياً في واتساب.");
+                    alert("تم تحميل ملف الـ PDF لإرفاقه يدوياً في واتساب.");
                 }
-            } catch (error) {
-                console.error(error);
-                alert("حدث خطأ أثناء توليد ملف الـ PDF.");
-            }
+            } catch (error) { console.error(error); alert("حدث خطأ أثناء توليد الـ PDF."); }
         }
 
-        // --- الداشبورد ---
+        // --- الداشبورد المحدّثة (بالعناصر الستة المطلوبة فقط) ---
         window.updateDash = function() {
             let tSales = 0, tCustDebt = 0;
             (window.appData.customers || []).forEach(c => {
@@ -1254,8 +1394,7 @@
                         (window.appData.wages || []).reduce((sum, w) => sum + (w.cardLoss||0), 0) + 
                         (window.appData.expenses || []).reduce((sum, e) => sum + (e.cardLoss||0), 0);
 
-            let grossIncome = tSales - (tPurchases + cLoss);
-            let netProfit = tSales - (tPurchases + cLoss + totalWages);
+            // العدة والأجهزة لا تخصم من الميزانية التشغيلية حسب طلبك
             let totalBudget = tSales - (tPurchases + cLoss + totalWages + totalExp);
 
             document.getElementById('dSales').innerText = tSales.toLocaleString() + ' ₺';
@@ -1263,10 +1402,17 @@
             document.getElementById('dCustDebt').innerText = tCustDebt.toLocaleString() + ' ₺';
             document.getElementById('dSuppDebt').innerText = tSuppDebt.toLocaleString() + ' ₺';
             document.getElementById('dCardLoss').innerText = cLoss.toLocaleString() + ' ₺';
-            document.getElementById('dNetProfit').innerText = netProfit.toLocaleString() + ' ₺';
-            document.getElementById('dGrossIncome').innerText = grossIncome.toLocaleString() + ' ₺';
             document.getElementById('dTotalBudget').innerText = totalBudget.toLocaleString() + ' ₺';
+
+            renderCustomers();
+            renderSuppliers();
+            renderOrders();
+            renderWages();
+            renderExpenses();
+            renderTools();
+            renderResources();
             renderLogs();
+            loadInvoiceSettingsToForm();
         }
     </script>
 </body>
